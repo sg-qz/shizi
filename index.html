@@ -1,0 +1,1125 @@
+<!-- 本工作台通过 WorkBuddy 资料库能力（library skill）搭建、存储和部署 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>识字启蒙台 · 小朋友的认字乐园</title>
+<style>
+  :root{
+    --bg:#FFF7E6; --card:#FFFFFF; --primary:#FF8A3D; --primary-d:#F2701C;
+    --secondary:#36C5A8; --secondary-d:#1FA98C; --accent:#FFD23F;
+    --ink:#6B4423; --text:#3A2E25; --muted:#9A8A78; --red:#E8453C; --green:#2FA86A;
+    --line:#F0E2CC;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--text); font-size:17px; line-height:1.5;
+    padding-bottom:calc(78px + env(safe-area-inset-bottom));
+  }
+  .topbar{
+    position:sticky; top:0; z-index:30; background:linear-gradient(90deg,var(--primary),var(--accent));
+    color:#fff; padding:calc(10px + env(safe-area-inset-top)) 16px 12px; display:flex; align-items:center; gap:10px;
+    box-shadow:0 2px 10px rgba(255,138,61,.25);
+  }
+  .topbar h1{font-size:19px; margin:0; font-weight:800; letter-spacing:1px;}
+  .topbar .sub{font-size:12px; opacity:.95; margin-top:1px;}
+  .sync{margin-left:auto; display:flex; align-items:center; gap:5px; font-size:12px; background:rgba(255,255,255,.22); padding:4px 9px; border-radius:999px;}
+  .sync svg{width:14px;height:14px;}
+  .wrap{max-width:720px; margin:0 auto; padding:14px 14px 8px;}
+  .card{background:var(--card); border-radius:22px; padding:16px; margin-bottom:14px; box-shadow:0 4px 14px rgba(120,90,40,.07);}
+  .card h2{margin:0 0 10px; font-size:18px; display:flex; align-items:center; gap:8px;}
+  .card h2 .dot{width:10px;height:10px;border-radius:50%;background:var(--primary);display:inline-block;}
+  .muted{color:var(--muted); font-size:13px;}
+  /* 今天要处理 */
+  .today-head{display:flex; align-items:center; justify-content:space-between;}
+  .ring{position:relative; width:54px;height:54px;}
+  .ring svg{width:54px;height:54px; transform:rotate(-90deg);}
+  .ring .num{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; color:var(--primary-d);}
+  .today-grid{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
+  .tchip{width:46px;height:46px; border-radius:14px; background:#FFF3E0; display:flex;align-items:center;justify-content:center; font-size:24px; font-weight:800; color:var(--ink); border:2px solid #FFE0B2;}
+  .tchip.done{background:#E6F8EF; border-color:#BDEBD4; color:var(--green);}
+  .tchip.over{background:#FFE9E7; border-color:#F7C4BF; color:var(--red);}
+  .btn{
+    border:none; border-radius:16px; padding:0 18px; min-height:50px; font-size:17px; font-weight:800;
+    background:var(--primary); color:#fff; cursor:pointer; transition:transform .06s, filter .15s; width:100%;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn.sec{background:var(--secondary);}
+  .btn.ghost{background:#FFF; color:var(--primary-d); border:2px solid var(--line);}
+  .btn.yel{background:var(--accent); color:#7A5A10;}
+  .btn.sm{min-height:42px; font-size:15px; width:auto; padding:0 14px; border-radius:13px;}
+  .btn:disabled{filter:grayscale(.5); opacity:.55; cursor:not-allowed;}
+  .row{display:flex; gap:10px;}
+  .row>*{flex:1;}
+  /* flip card */
+  .stage{display:flex; flex-direction:column; align-items:center; gap:14px;}
+  .flip{width:min(70vw,260px); height:min(70vw,260px); perspective:1000px; cursor:pointer;}
+  .flip-inner{position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d;}
+  .flip.flipped .flip-inner{transform:rotateY(180deg);}
+  .face{position:absolute; inset:0; backface-visibility:hidden; border-radius:28px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(120,90,40,.14); padding:14px; text-align:center;}
+  .face.front{background:linear-gradient(160deg,#FFF6E9,#FFE9CC); border:3px solid #FFD9A8;}
+  .face.back{background:linear-gradient(160deg,#EAF7F1,#D6F0E6); border:3px solid #B7E6D2; transform:rotateY(180deg);}
+  .bigchar{font-size:120px; font-weight:800; color:var(--ink); line-height:1;}
+  .py{margin-top:6px; font-size:20px; color:var(--primary-d); font-weight:700;}
+  .pict{width:130px;height:130px;}
+  .story{font-size:14px; color:var(--text); margin-top:6px; line-height:1.45;}
+  .tag{display:inline-block; font-size:12px; padding:2px 10px; border-radius:999px; background:#FFF0D6; color:#B5731B; font-weight:700; margin-bottom:6px;}
+  .progress{width:100%; height:12px; background:#F0E2CC; border-radius:999px; overflow:hidden; margin-top:6px;}
+  .progress>i{display:block; height:100%; background:linear-gradient(90deg,var(--secondary),var(--accent)); border-radius:999px; transition:width .4s;}
+  /* quiz */
+  .qchar{font-size:96px; font-weight:800; color:var(--ink); text-align:center; margin:6px 0 2px;}
+  .qhint{text-align:center; color:var(--muted); font-size:14px; margin-bottom:14px;}
+  .opts{display:flex; flex-direction:column; gap:12px;}
+  .opt{font-size:24px; font-weight:800; padding:16px; border-radius:18px; background:#FFF; border:3px solid var(--line); color:var(--ink); cursor:pointer; text-align:center;}
+  .opt.ok{background:#E6F8EF; border-color:var(--green); color:var(--green);}
+  .opt.no{background:#FFE9E7; border-color:var(--red); color:var(--red); animation:shake .35s;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+  /* rewards */
+  .stat{display:flex; gap:10px; margin-bottom:12px;}
+  .stat .box{flex:1; background:linear-gradient(160deg,#FFF3E0,#FFE6C4); border-radius:18px; padding:12px; text-align:center;}
+  .stat .box .v{font-size:30px; font-weight:800; color:var(--primary-d);}
+  .stat .box .k{font-size:12px; color:var(--muted);}
+  .rw{display:flex; align-items:center; gap:10px; background:#FAF4EA; border-radius:16px; padding:12px; margin-bottom:10px;}
+  .rw .ic{width:42px;height:42px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;color:#7A5A10;}
+  .rw .nm{flex:1; font-weight:700;}
+  .rw .ct{font-weight:800; color:var(--secondary-d);}
+  .rw .ct small{color:var(--muted); font-weight:600;}
+  .empty{text-align:center; color:var(--muted); padding:22px; font-size:14px;}
+  .toast{position:fixed; left:50%; top:22%; transform:translateX(-50%); background:rgba(58,46,37,.94); color:#fff; padding:12px 20px; border-radius:14px; font-size:15px; z-index:60; opacity:0; transition:opacity .25s; pointer-events:none; max-width:80%; text-align:center;}
+  .toast.show{opacity:1;}
+  /* tabs */
+  .tabs{position:fixed; left:0; right:0; bottom:0; z-index:40; background:#fff; display:flex; border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom);}
+  .tab{flex:1; border:none; background:none; padding:8px 2px 6px; display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--muted); font-size:11px; cursor:pointer;}
+  .tab svg{width:24px;height:24px;}
+  .tab.active{color:var(--primary);}
+  .tab.active svg{stroke:var(--primary);}
+  .hide{display:none !important;}
+  /* parent */
+  .field{display:block; margin:10px 0;}
+  .field label{font-size:13px; color:var(--muted); display:block; margin-bottom:5px;}
+  .field input{width:100%; font-size:16px; padding:12px 14px; border-radius:14px; border:2px solid var(--line); background:#fff; min-height:48px;}
+  .list-item{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .list-item:last-child{border-bottom:none;}
+  .list-item .nm{flex:1; font-weight:700;}
+  .list-item .meta{font-size:12px; color:var(--muted);}
+  .del{background:#FFE9E7; color:var(--red); border:none; border-radius:10px; min-height:38px; padding:0 12px; font-weight:700; cursor:pointer;}
+  .modal-mask{position:fixed; inset:0; background:rgba(40,30,20,.45); z-index:70; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .modal{background:#fff; border-radius:22px; padding:22px; width:100%; max-width:340px; text-align:center;}
+  .modal h3{margin:0 0 6px;}
+  .modal p{color:var(--muted); font-size:13px; margin:0 0 14px;}
+  .pin-input{font-size:28px; letter-spacing:14px; text-align:center; width:100%; padding:12px; border-radius:14px; border:2px solid var(--line); min-height:54px;}
+  .badge{display:inline-block; background:var(--accent); color:#7A5A10; font-weight:800; padding:3px 12px; border-radius:999px; font-size:13px;}
+  .nopic{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px 4px;}
+  .bigpy{font-size:34px;font-weight:800;color:var(--primary-d);}
+  .replay{display:block;margin:10px auto 0;}
+  @media(min-width:721px){ .flip{width:260px;height:260px;} }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div>
+    <h1>识字启蒙台</h1>
+    <div class="sub" id="greet">小朋友的认字乐园</div>
+  </div>
+  <div class="sync" id="syncBox" title="同步状态">
+    <svg id="syncIcon" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 16a4 4 0 0 1 .8-7.9 5 5 0 0 1 9.6 1.4A3.5 3.5 0 0 1 17 16H6z"/></svg>
+    <span id="syncText">同步中</span>
+  </div>
+</div>
+
+<div class="wrap" id="app"></div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v9l6 3"/><circle cx="12" cy="12" r="9"/></svg>今天</button>
+  <button class="tab" data-tab="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16"/></svg>卡片</button>
+  <button class="tab" data-tab="quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>组词</button>
+  <button class="tab" data-tab="game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9a6 6 0 0 1 12 0v6H6z"/><path d="M9 21h6"/></svg>闯关</button>
+  <button class="tab" data-tab="grow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V8M12 8C12 5 9 3 6 4c-2 1-2 4 0 5M12 11c0-3 3-5 6-4 2 1 2 4 0 5"/><circle cx="12" cy="12" r="9"/></svg>成长</button>
+  <button class="tab" data-tab="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0 1 14-5l2 2"/><path d="M20 12a8 8 0 0 1-14 5l-2-2"/><path d="M18 4v5h-5"/><path d="M6 20v-5h5"/></svg>巩固</button>
+  <button class="tab" data-tab="parent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>家长</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- PIN modal -->
+<div class="modal-mask hide" id="pinMask">
+  <div class="modal">
+    <h3 id="pinTitle">家长验证</h3>
+    <p id="pinDesc">请输入 4 位数字密码</p>
+    <input class="pin-input" id="pinInput" inputmode="numeric" maxlength="4" placeholder="●●●●">
+    <div class="row" style="margin-top:14px;">
+      <button class="btn ghost sm" id="pinCancel">取消</button>
+      <button class="btn sm" id="pinOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ 字形数据集 ============ */
+/* 每个字：c 汉字 / py 拼音 / kind 类型 / story 小故事 / words 组词示例 */
+const CHARSET = [
+  {c:'天',py:'tiān',kind:'会意字',story:'“一”加“大”，人头顶上面就是“天”。',words:['天空','天气','春天']},
+  {c:'地',py:'dì',kind:'常用字',story:'「地」是很常用的字，我们常常在「土地」「大地」里见到它。',words:['土地','大地','地上']},
+  {c:'人',py:'rén',kind:'象形字',story:'一个人站着，张开两只脚，就是“人”。',words:['人们','大人','好人']},
+  {c:'你',py:'nǐ',kind:'常用字',story:'「你」是很常用的字，我们常常在「你们」「你好」里见到它。',words:['你们','你好','你的']},
+  {c:'我',py:'wǒ',kind:'常用字',story:'「我」是很常用的字，我们常常在「我们」「我的」里见到它。',words:['我们','我的','自我']},
+  {c:'他',py:'tā',kind:'常用字',story:'「他」是很常用的字，我们常常在「他们」「他人」里见到它。',words:['他们','他人','他日']},
+  {c:'一',py:'yī',kind:'指事字',story:'一横代表数量“一”。',words:['一个','一起','第一']},
+  {c:'二',py:'èr',kind:'指事字',story:'两横就是“二”。',words:['二个','二月','第二']},
+  {c:'三',py:'sān',kind:'指事字',story:'三横就是“三”。',words:['三个','三月','第三']},
+  {c:'四',py:'sì',kind:'常用字',story:'「四」是很常用的字，我们常常在「四个」「四月」里见到它。',words:['四个','四月','第四']},
+  {c:'五',py:'wǔ',kind:'常用字',story:'「五」是很常用的字，我们常常在「五个」「五月」里见到它。',words:['五个','五月','第五']},
+  {c:'上',py:'shàng',kind:'指事字',story:'短横在长横上面，表示“上”。',words:['上学','上去','上面']},
+  {c:'下',py:'xià',kind:'指事字',story:'短横在长横下面，表示“下”。',words:['下去','下面','坐下']},
+  {c:'口',py:'kǒu',kind:'象形字',story:'嘴巴张开的形状，画出来就是“口”。',words:['门口','开口','口水']},
+  {c:'耳',py:'ěr',kind:'象形字',story:'耳朵的轮廓弯弯的，画成“耳”。',words:['耳朵','左耳','右耳']},
+  {c:'目',py:'mù',kind:'象形字',story:'眼睛是横着的，中间是眼珠，就是“目”。',words:['目光','耳目','题目']},
+  {c:'手',py:'shǒu',kind:'象形字',story:'一只手张开五指，就是“手”。',words:['小手','手心','双手']},
+  {c:'足',py:'zú',kind:'象形字',story:'脚板加上小腿，画成“足”，就是脚。',words:['手足','足球','足月']},
+  {c:'站',py:'zhàn',kind:'常用字',story:'「站」是很常用的字，我们常常在「站立」「站住」里见到它。',words:['站立','站住','车站']},
+  {c:'坐',py:'zuò',kind:'常用字',story:'「坐」是很常用的字，我们常常在「坐下」「坐着」里见到它。',words:['坐下','坐着','坐车']},
+  {c:'日',py:'rì',kind:'象形字',story:'太阳圆圆的，中间有一点光，古人就照着太阳的样子画成了“日”。',words:['日子','日月','日光']},
+  {c:'月',py:'yuè',kind:'象形字',story:'弯弯的月亮像小船，古人把月牙的形状画下来就是“月”。',words:['月亮','明月','月儿']},
+  {c:'山',py:'shān',kind:'象形字',story:'三座山峰连在一起，画出来就是“山”。',words:['大山','上山','火山']},
+  {c:'川',py:'chuān',kind:'象形字',story:'两山之间的小河，流成“川”。',words:['山川','平川','冰川']},
+  {c:'水',py:'shuǐ',kind:'象形字',story:'弯弯流动的水波，画成三道波浪就是“水”。',words:['喝水','开水','雨水']},
+  {c:'火',py:'huǒ',kind:'象形字',story:'火苗一跳一跳的，古人照着火焰画出了“火”。',words:['大火','火山','火光']},
+  {c:'田',py:'tián',kind:'象形字',story:'田地被小路分成一块一块，画成“田”字。',words:['田地','水田','农田']},
+  {c:'禾',py:'hé',kind:'象形字',story:'弯弯的谷穗低着头，画成“禾”（庄稼）。',words:['禾苗','禾木','锄禾']},
+  {c:'六',py:'liù',kind:'常用字',story:'「六」是很常用的字，我们常常在「六个」「六月」里见到它。',words:['六个','六月','第六']},
+  {c:'七',py:'qī',kind:'常用字',story:'「七」是很常用的字，我们常常在「七个」「七月」里见到它。',words:['七个','七月','第七']},
+  {c:'八',py:'bā',kind:'常用字',story:'「八」是很常用的字，我们常常在「八个」「八月」里见到它。',words:['八个','八月','第八']},
+  {c:'九',py:'jiǔ',kind:'常用字',story:'「九」是很常用的字，我们常常在「九个」「九月」里见到它。',words:['九个','九月','第九']},
+  {c:'十',py:'shí',kind:'常用字',story:'「十」是很常用的字，我们常常在「十个」「十月」里见到它。',words:['十个','十月','第十']},
+  {c:'爸',py:'bà',kind:'形声字',story:'“父”是爸爸，“巴”帮忙读音，合起来是“爸”。',words:['爸爸','老爸','爸妈']},
+  {c:'妈',py:'mā',kind:'形声字',story:'“女”表示妈妈，“马”帮忙读音，就是“妈”。',words:['妈妈','大妈','爸妈']},
+  {c:'大',py:'dà',kind:'象形字',story:'大人张开手臂，就是“大”。',words:['大人','大家','大树']},
+  {c:'马',py:'mǎ',kind:'象形字',story:'马儿有长脸和四蹄，画成“马”。',words:['马车','白马','木马']},
+  {c:'路',py:'lù',kind:'常用字',story:'「路」是很常用的字，我们常常在「马路」「路口」里见到它。',words:['马路','路口','大路']},
+  {c:'土',py:'tǔ',kind:'象形字',story:'地面上一堆土，画成“土”。',words:['土地','泥土','土豆']},
+  {c:'本',py:'běn',kind:'常用字',story:'「本」是很常用的字，我们常常在「书本」「本来」里见到它。',words:['书本','本来','本子']},
+  {c:'学',py:'xué',kind:'常用字',story:'「学」是很常用的字，我们常常在「学习」「学生」里见到它。',words:['学习','学生','同学']},
+  {c:'校',py:'xiào',kind:'常用字',story:'「校」是很常用的字，我们常常在「学校」「校园」里见到它。',words:['学校','校园','校长']},
+  {c:'班',py:'bān',kind:'常用字',story:'「班」是很常用的字，我们常常在「班级」「班长」里见到它。',words:['班级','班长','上班']},
+  {c:'级',py:'jí',kind:'常用字',story:'「级」是很常用的字，我们常常在「年级」「班级」里见到它。',words:['年级','班级','高级']},
+  {c:'姓',py:'xìng',kind:'常用字',story:'「姓」是很常用的字，我们常常在「姓名」「姓氏」里见到它。',words:['姓名','姓氏','百姓']},
+  {c:'名',py:'míng',kind:'常用字',story:'「名」是很常用的字，我们常常在「名字」「有名」里见到它。',words:['名字','有名','姓名']},
+  {c:'王',py:'wáng',kind:'常用字',story:'「王」是很常用的字，我们常常在「大王」「国王」里见到它。',words:['大王','国王','王子']},
+  {c:'哥',py:'gē',kind:'常用字',story:'「哥」是很常用的字，我们常常在「哥哥」「大哥」里见到它。',words:['哥哥','大哥','表哥']},
+  {c:'弟',py:'dì',kind:'常用字',story:'「弟」是很常用的字，我们常常在「弟弟」「兄弟」里见到它。',words:['弟弟','兄弟','弟子']},
+  {c:'画',py:'huà',kind:'常用字',story:'「画」是很常用的字，我们常常在「画画」「画家」里见到它。',words:['画画','画家','图画']},
+  {c:'花',py:'huā',kind:'形声字',story:'草字头下面藏着化，就是美丽的“花”。',words:['花朵','开花','红花']},
+  {c:'打',py:'dǎ',kind:'常用字',story:'「打」是很常用的字，我们常常在「打开」「打工」里见到它。',words:['打开','打工','打球']},
+  {c:'棋',py:'qí',kind:'常用字',story:'「棋」是很常用的字，我们常常在「下棋」「棋子」里见到它。',words:['下棋','棋子','象棋']},
+  {c:'积',py:'jī',kind:'常用字',story:'「积」是很常用的字，我们常常在「积木」「积累」里见到它。',words:['积木','积累','积分']},
+  {c:'木',py:'mù',kind:'象形字',story:'一棵树：上面是枝，中间是干，下面是根，就是“木”。',words:['木头','树木','木马']},
+  {c:'字',py:'zì',kind:'常用字',story:'「字」是很常用的字，我们常常在「写字」「生字」里见到它。',words:['写字','生字','名字']},
+  {c:'词',py:'cí',kind:'常用字',story:'「词」是很常用的字，我们常常在「词语」「组词」里见到它。',words:['词语','组词','诗词']},
+  {c:'句',py:'jù',kind:'常用字',story:'「句」是很常用的字，我们常常在「句子」「语句」里见到它。',words:['句子','语句','句号']},
+  {c:'子',py:'zi',kind:'象形字',story:'包着的小宝宝，就是“子”（孩子）。',words:['孩子','儿子','子女']},
+  {c:'桌',py:'zhuō',kind:'常用字',story:'「桌」是很常用的字，我们常常在「桌子」「书桌」里见到它。',words:['桌子','书桌','课桌']},
+  {c:'纸',py:'zhǐ',kind:'常用字',story:'「纸」是很常用的字，我们常常在「纸张」「白纸」里见到它。',words:['纸张','白纸','纸条']},
+  {c:'读',py:'dú',kind:'常用字',story:'「读」是很常用的字，我们常常在「读书」「朗读」里见到它。',words:['读书','朗读','读物']},
+  {c:'书',py:'shū',kind:'常用字',story:'「书」是很常用的字，我们常常在「书本」「看书」里见到它。',words:['书本','看书','书包']},
+  {c:'鱼',py:'yú',kind:'象形字',story:'鱼有头、身子和尾巴，画成“鱼”。',words:['小鱼','大鱼','金鱼']},
+  {c:'鸭',py:'yā',kind:'常用字',story:'「鸭」是很常用的字，我们常常在「鸭子」「小鸭」里见到它。',words:['鸭子','小鸭','鸭蛋']},
+  {c:'乌',py:'wū',kind:'常用字',story:'「乌」是很常用的字，我们常常在「乌鸦」「乌云」里见到它。',words:['乌鸦','乌云','乌黑']},
+  {c:'鸦',py:'yā',kind:'常用字',story:'「鸦」是很常用的字，我们常常在「乌鸦」「寒鸦」里见到它。',words:['乌鸦','寒鸦']},
+  {c:'午',py:'wǔ',kind:'常用字',story:'「午」是很常用的字，我们常常在「中午」「下午」里见到它。',words:['中午','下午','午饭']},
+  {c:'星',py:'xīng',kind:'形声字',story:'天上亮亮的小点，就是“星”。',words:['星星','星空','火星']},
+  {c:'期',py:'qī',kind:'常用字',story:'「期」是很常用的字，我们常常在「星期」「日期」里见到它。',words:['星期','日期','假期']},
+  {c:'语',py:'yǔ',kind:'常用字',story:'「语」是很常用的字，我们常常在「语文」「语言」里见到它。',words:['语文','语言','词语']},
+  {c:'文',py:'wén',kind:'常用字',story:'「文」是很常用的字，我们常常在「语文」「文字」里见到它。',words:['语文','文字','文化']},
+  {c:'数',py:'shù',kind:'常用字',story:'「数」是很常用的字，我们常常在「数学」「数字」里见到它。',words:['数学','数字','少数']},
+  {c:'写',py:'xiě',kind:'常用字',story:'「写」是很常用的字，我们常常在「写字」「写作」里见到它。',words:['写字','写作','写下']},
+  {c:'会',py:'huì',kind:'常用字',story:'「会」是很常用的字，我们常常在「开会」「学会」里见到它。',words:['开会','学会','不会']},
+  {c:'白',py:'bái',kind:'象形字',story:'像一粒白米的样子，表示“白”。',words:['白色','白天','白云']},
+  {c:'菜',py:'cài',kind:'常用字',story:'「菜」是很常用的字，我们常常在「白菜」「蔬菜」里见到它。',words:['白菜','蔬菜','饭菜']},
+  {c:'西',py:'xī',kind:'常用字',story:'「西」是很常用的字，我们常常在「西瓜」「东西」里见到它。',words:['西瓜','东西','西方']},
+  {c:'瓜',py:'guā',kind:'象形字',story:'藤上挂着一个瓜，画成“瓜”。',words:['西瓜','冬瓜','瓜子']},
+  {c:'果',py:'guǒ',kind:'象形字',story:'树上结的果子，画成“果”。',words:['水果','果子','果实']},
+  {c:'小',py:'xiǎo',kind:'象形字',story:'三颗小点，表示“小”。',words:['小孩','小学','小雨']},
+  {c:'桥',py:'qiáo',kind:'常用字',story:'「桥」是很常用的字，我们常常在「小桥」「大桥」里见到它。',words:['小桥','大桥','过桥']},
+  {c:'流',py:'liú',kind:'常用字',story:'「流」是很常用的字，我们常常在「河流」「流水」里见到它。',words:['河流','流水','流汗']},
+  {c:'柳',py:'liǔ',kind:'常用字',story:'「柳」是很常用的字，我们常常在「柳树」「柳枝」里见到它。',words:['柳树','柳枝','柳叶']},
+  {c:'开',py:'kāi',kind:'常用字',story:'「开」是很常用的字，我们常常在「开门」「开心」里见到它。',words:['开门','开心','开花']},
+  {c:'雪',py:'xuě',kind:'常用字',story:'「雪」是很常用的字，我们常常在「雪花」「下雪」里见到它。',words:['雪花','下雪','雪人']},
+  {c:'夜',py:'yè',kind:'常用字',story:'「夜」是很常用的字，我们常常在「夜晚」「黑夜」里见到它。',words:['夜晚','黑夜','夜色']},
+  {c:'色',py:'sè',kind:'常用字',story:'「色」是很常用的字，我们常常在「颜色」「红色」里见到它。',words:['颜色','红色','夜色']},
+  {c:'美',py:'měi',kind:'常用字',story:'「美」是很常用的字，我们常常在「美丽」「美好」里见到它。',words:['美丽','美好','美人']},
+  {c:'蓝',py:'lán',kind:'常用字',story:'「蓝」是很常用的字，我们常常在「蓝色」「蓝天」里见到它。',words:['蓝色','蓝天','蔚蓝']},
+  {c:'云',py:'yún',kind:'象形字',story:'天上软软的白云，画成“云”。',words:['白云','云朵','乌云']},
+  {c:'草',py:'cǎo',kind:'形声字',story:'两片小草叶，就是“草”。',words:['小草','草地','草儿']},
+  {c:'原',py:'yuán',kind:'常用字',story:'「原」是很常用的字，我们常常在「草原」「原来」里见到它。',words:['草原','原来','平原']},
+  {c:'冰',py:'bīng',kind:'常用字',story:'「冰」是很常用的字，我们常常在「冰水」「冰山」里见到它。',words:['冰水','冰山','冰冷']},
+  {c:'自',py:'zì',kind:'常用字',story:'「自」是很常用的字，我们常常在「自己」「自由」里见到它。',words:['自己','自由','自动']},
+  {c:'行',py:'xíng',kind:'常用字',story:'「行」是很常用的字，我们常常在「行走」「行人」里见到它。',words:['行走','行人','不行']},
+  {c:'车',py:'chē',kind:'象形字',story:'古时候的车有两个轮子，画成“车”。',words:['火车','骑车','车站']},
+  {c:'晚',py:'wǎn',kind:'常用字',story:'「晚」是很常用的字，我们常常在「晚上」「晚会」里见到它。',words:['晚上','晚会','夜晚']},
+  {c:'昨',py:'zuó',kind:'常用字',story:'「昨」是很常用的字，我们常常在「昨天」「昨日」里见到它。',words:['昨天','昨日']},
+  {c:'今',py:'jīn',kind:'常用字',story:'「今」是很常用的字，我们常常在「今天」「今年」里见到它。',words:['今天','今年','如今']},
+  {c:'明',py:'míng',kind:'常用字',story:'「明」是很常用的字，我们常常在「明天」「明白」里见到它。',words:['明天','明白','明月']},
+  {c:'个',py:'gè',kind:'常用字',story:'「个」是很常用的字，我们常常在「一个」「个人」里见到它。',words:['一个','个人','几个']},
+  {c:'这',py:'zhè',kind:'常用字',story:'「这」是很常用的字，我们常常在「这里」「这个」里见到它。',words:['这里','这个','这边']},
+  {c:'去',py:'qù',kind:'常用字',story:'「去」是很常用的字，我们常常在「回去」「来去」里见到它。',words:['回去','来去','去年']},
+  {c:'年',py:'nián',kind:'常用字',story:'「年」是很常用的字，我们常常在「今年」「年月」里见到它。',words:['今年','年月','少年']},
+  {c:'秋',py:'qiū',kind:'常用字',story:'「秋」是很常用的字，我们常常在「秋天」「秋风」里见到它。',words:['秋天','秋风','秋雨']},
+  {c:'气',py:'qì',kind:'常用字',story:'「气」是很常用的字，我们常常在「天气」「生气」里见到它。',words:['天气','生气','空气']},
+  {c:'了',py:'le',kind:'常用字',story:'「了」是很常用的字，我们常常在「好了」「来了」里见到它。',words:['好了','来了','走了']},
+  {c:'树',py:'shù',kind:'形声字',story:'木字旁表示树木，“对”帮忙读音，就是“树”。',words:['大树','树叶','树木']},
+  {c:'叶',py:'yè',kind:'常用字',story:'「叶」是很常用的字，我们常常在「叶子」「树叶」里见到它。',words:['叶子','树叶','叶片']},
+  {c:'黄',py:'huáng',kind:'常用字',story:'「黄」是很常用的字，我们常常在「黄色」「黄牛」里见到它。',words:['黄色','黄牛','变黄']},
+  {c:'片',py:'piàn',kind:'常用字',story:'「片」是很常用的字，我们常常在「一片」「叶片」里见到它。',words:['一片','叶片','纸片']},
+  {c:'从',py:'cóng',kind:'常用字',story:'「从」是很常用的字，我们常常在「从来」「从小」里见到它。',words:['从来','从小','从前']},
+  {c:'来',py:'lái',kind:'常用字',story:'「来」是很常用的字，我们常常在「来去」「回来」里见到它。',words:['来去','回来','来人']},
+  {c:'飞',py:'fēi',kind:'象形字',story:'小鸟张开翅膀，画成“飞”。',words:['飞机','飞鸟','飞快']},
+  {c:'江',py:'jiāng',kind:'常用字',story:'「江」是很常用的字，我们常常在「长江」「江水」里见到它。',words:['长江','江水','江南']},
+  {c:'南',py:'nán',kind:'常用字',story:'「南」是很常用的字，我们常常在「南方」「江南」里见到它。',words:['南方','江南','南北']},
+  {c:'可',py:'kě',kind:'常用字',story:'「可」是很常用的字，我们常常在「可以」「可爱」里见到它。',words:['可以','可爱','可是']},
+  {c:'采',py:'cǎi',kind:'常用字',story:'「采」是很常用的字，我们常常在「采莲」「采花」里见到它。',words:['采莲','采花','采摘']},
+  {c:'莲',py:'lián',kind:'常用字',story:'「莲」是很常用的字，我们常常在「莲花」「莲叶」里见到它。',words:['莲花','莲叶','采莲']},
+  {c:'戏',py:'xì',kind:'常用字',story:'「戏」是很常用的字，我们常常在「游戏」「看戏」里见到它。',words:['游戏','看戏','戏曲']},
+  {c:'间',py:'jiān',kind:'常用字',story:'「间」是很常用的字，我们常常在「中间」「房间」里见到它。',words:['中间','房间','时间']},
+  {c:'东',py:'dōng',kind:'常用字',story:'「东」是很常用的字，我们常常在「东西」「东方」里见到它。',words:['东西','东方','东风']},
+  {c:'北',py:'běi',kind:'常用字',story:'「北」是很常用的字，我们常常在「北方」「南北」里见到它。',words:['北方','南北','北京']},
+  {c:'的',py:'de',kind:'常用字',story:'「的」是很常用的字，我们常常在「我的」「你的」里见到它。',words:['我的','你的','好的']},
+  {c:'家',py:'jiā',kind:'常用字',story:'「家」是很常用的字，我们常常在「大家」「回家」里见到它。',words:['大家','回家','家人']},
+  {c:'鸡',py:'jī',kind:'常用字',story:'「鸡」是很常用的字，我们常常在「小鸡」「母鸡」里见到它。',words:['小鸡','母鸡','公鸡']},
+  {c:'竹',py:'zhú',kind:'象形字',story:'两根细竹竿，画成“竹”。',words:['竹子','竹叶','竹林']},
+  {c:'牙',py:'yá',kind:'象形字',story:'大牙齿上下两排，画成“牙”。',words:['牙齿','月牙','刷牙']},
+  {c:'用',py:'yòng',kind:'常用字',story:'「用」是很常用的字，我们常常在「有用」「用心」里见到它。',words:['有用','用心','不用']},
+  {c:'几',py:'jǐ',kind:'常用字',story:'「几」是很常用的字，我们常常在「几个」「几只」里见到它。',words:['几个','几只','几天']},
+  {c:'步',py:'bù',kind:'常用字',story:'「步」是很常用的字，我们常常在「脚步」「步行」里见到它。',words:['脚步','步行','一步']},
+  {c:'没',py:'méi',kind:'常用字',story:'「没」是很常用的字，我们常常在「没有」「没人」里见到它。',words:['没有','没人','没用']},
+  {c:'参',py:'cān',kind:'常用字',story:'「参」是很常用的字，我们常常在「参加」「参观」里见到它。',words:['参加','参观','参军']},
+  {c:'加',py:'jiā',kind:'常用字',story:'「加」是很常用的字，我们常常在「加入」「参加」里见到它。',words:['加入','参加','加分']},
+  {c:'鸟',py:'niǎo',kind:'象形字',story:'小鸟有尖嘴和尾巴，画成“鸟”。',words:['小鸟','飞鸟','鸟儿']},
+  {c:'说',py:'shuō',kind:'常用字',story:'「说」是很常用的字，我们常常在「说话」「小说」里见到它。',words:['说话','小说','听说']},
+  {c:'是',py:'shì',kind:'常用字',story:'「是」是很常用的字，我们常常在「可是」「就是」里见到它。',words:['可是','就是','不是']},
+  {c:'春',py:'chūn',kind:'常用字',story:'「春」是很常用的字，我们常常在「春天」「春风」里见到它。',words:['春天','春风','青春']},
+  {c:'青',py:'qīng',kind:'常用字',story:'「青」是很常用的字，我们常常在「青草」「青山」里见到它。',words:['青草','青山','青蛙']},
+  {c:'蛙',py:'wā',kind:'常用字',story:'「蛙」是很常用的字，我们常常在「青蛙」「蛙跳」里见到它。',words:['青蛙','蛙跳']},
+  {c:'夏',py:'xià',kind:'常用字',story:'「夏」是很常用的字，我们常常在「夏天」「夏日」里见到它。',words:['夏天','夏日','夏季']},
+  {c:'着',py:'zhe',kind:'常用字',story:'「着」是很常用的字，我们常常在「看着」「听着」里见到它。',words:['看着','听着','说着']},
+  {c:'皮',py:'pí',kind:'常用字',story:'「皮」是很常用的字，我们常常在「皮毛」「牛皮」里见到它。',words:['皮毛','牛皮','皮球']},
+  {c:'就',py:'jiù',kind:'常用字',story:'「就」是很常用的字，我们常常在「就是」「成就」里见到它。',words:['就是','成就','迁就']},
+  {c:'冬',py:'dōng',kind:'常用字',story:'「冬」是很常用的字，我们常常在「冬天」「冬日」里见到它。',words:['冬天','冬日','冬瓜']},
+  {c:'男',py:'nán',kind:'常用字',story:'「男」是很常用的字，我们常常在「男孩」「男人」里见到它。',words:['男孩','男人','男女']},
+  {c:'女',py:'nǚ',kind:'象形字',story:'古时候女子跪坐的样子，画成“女”。',words:['女孩','女人','男女']},
+  {c:'关',py:'guān',kind:'常用字',story:'「关」是很常用的字，我们常常在「关门」「关心」里见到它。',words:['关门','关心','开关']},
+  {c:'正',py:'zhèng',kind:'常用字',story:'「正」是很常用的字，我们常常在「正好」「正在」里见到它。',words:['正好','正在','立正']},
+  {c:'反',py:'fǎn',kind:'常用字',story:'「反」是很常用的字，我们常常在「反面」「反对」里见到它。',words:['反面','反对','相反']},
+  {c:'先',py:'xiān',kind:'常用字',story:'「先」是很常用的字，我们常常在「先生」「先后」里见到它。',words:['先生','先后','先进']},
+  {c:'后',py:'hòu',kind:'常用字',story:'「后」是很常用的字，我们常常在「后面」「后来」里见到它。',words:['后面','后来','以后']},
+  {c:'内',py:'nèi',kind:'常用字',story:'「内」是很常用的字，我们常常在「内外」「内容」里见到它。',words:['内外','内容','内心']},
+  {c:'外',py:'wài',kind:'常用字',story:'「外」是很常用的字，我们常常在「外面」「门外」里见到它。',words:['外面','门外','外出']},
+  {c:'对',py:'duì',kind:'常用字',story:'「对」是很常用的字，我们常常在「不对」「对手」里见到它。',words:['不对','对手','对的']},
+  {c:'歌',py:'gē',kind:'常用字',story:'「歌」是很常用的字，我们常常在「歌曲」「唱歌」里见到它。',words:['歌曲','唱歌','儿歌']},
+  {c:'雨',py:'yǔ',kind:'象形字',story:'天下雨，水点从云里落下来，就是“雨”。',words:['下雨','雨水','大雨']},
+  {c:'风',py:'fēng',kind:'形声字',story:'空气流动起来，就是“风”。',words:['大风','春风','风筝']},
+  {c:'虫',py:'chóng',kind:'象形字',story:'小虫子弯弯的身体，画成“虫”。',words:['虫子','小虫','昆虫']},
+  {c:'清',py:'qīng',kind:'常用字',story:'「清」是很常用的字，我们常常在「清水」「清楚」里见到它。',words:['清水','清楚','清早']},
+  {c:'绿',py:'lǜ',kind:'常用字',story:'「绿」是很常用的字，我们常常在「绿色」「绿叶」里见到它。',words:['绿色','绿叶','绿草']},
+  {c:'桃',py:'táo',kind:'常用字',story:'「桃」是很常用的字，我们常常在「桃子」「桃花」里见到它。',words:['桃子','桃花','桃树']},
+  {c:'红',py:'hóng',kind:'形声字',story:'绞丝旁和颜色有关，“工”帮忙读音，就是“红”。',words:['红色','红花','火红']},
+  {c:'力',py:'lì',kind:'常用字',story:'「力」是很常用的字，我们常常在「力气」「用力」里见到它。',words:['力气','用力','大力']},
+  {c:'尖',py:'jiān',kind:'常用字',story:'「尖」是很常用的字，我们常常在「尖刀」「笔尖」里见到它。',words:['尖刀','笔尖','尖叫']},
+  {c:'尘',py:'chén',kind:'常用字',story:'「尘」是很常用的字，我们常常在「尘土」「灰尘」里见到它。',words:['尘土','灰尘','红尘']},
+  {c:'众',py:'zhòng',kind:'常用字',story:'「众」是很常用的字，我们常常在「众人」「大众」里见到它。',words:['众人','大众','观众']},
+  {c:'双',py:'shuāng',kind:'常用字',story:'「双」是很常用的字，我们常常在「双手」「一双」里见到它。',words:['双手','一双','双方']},
+  {c:'林',py:'lín',kind:'常用字',story:'「林」是很常用的字，我们常常在「树林」「森林」里见到它。',words:['树林','森林','竹林']},
+  {c:'森',py:'sēn',kind:'常用字',story:'「森」是很常用的字，我们常常在「森林」「阴森」里见到它。',words:['森林','阴森']},
+  {c:'不',py:'bù',kind:'常用字',story:'「不」是很常用的字，我们常常在「不是」「不好」里见到它。',words:['不是','不好','不可']},
+  {c:'条',py:'tiáo',kind:'常用字',story:'「条」是很常用的字，我们常常在「一条」「条件」里见到它。',words:['一条','条件','枝条']},
+  {c:'心',py:'xīn',kind:'象形字',story:'心脏一鼓一鼓的，画成“心”字。',words:['开心','小心','用心']},
+  {c:'金',py:'jīn',kind:'常用字',story:'「金」是很常用的字，我们常常在「金子」「金色」里见到它。',words:['金子','金色','金鱼']},
+  {c:'包',py:'bāo',kind:'常用字',story:'「包」是很常用的字，我们常常在「包子」「书包」里见到它。',words:['包子','书包','面包']},
+  {c:'尺',py:'chǐ',kind:'常用字',story:'「尺」是很常用的字，我们常常在「尺子」「尺寸」里见到它。',words:['尺子','尺寸','直尺']},
+  {c:'作',py:'zuò',kind:'常用字',story:'「作」是很常用的字，我们常常在「工作」「作业」里见到它。',words:['工作','作业','作文']},
+  {c:'业',py:'yè',kind:'常用字',story:'「业」是很常用的字，我们常常在「作业」「工业」里见到它。',words:['作业','工业','事业']},
+  {c:'笔',py:'bǐ',kind:'常用字',story:'「笔」是很常用的字，我们常常在「毛笔」「铅笔」里见到它。',words:['毛笔','铅笔','画笔']},
+  {c:'刀',py:'dāo',kind:'象形字',story:'弯弯的刀刃，画成“刀”。',words:['小刀','刀子','刀片']},
+  {c:'宝',py:'bǎo',kind:'常用字',story:'「宝」是很常用的字，我们常常在「宝贝」「宝宝」里见到它。',words:['宝贝','宝宝','宝物']},
+  {c:'贝',py:'bèi',kind:'常用字',story:'「贝」是很常用的字，我们常常在「宝贝」「贝壳」里见到它。',words:['宝贝','贝壳','分贝']},
+  {c:'少',py:'shǎo',kind:'常用字',story:'「少」是很常用的字，我们常常在「多少」「少数」里见到它。',words:['多少','少数','不少']},
+  {c:'课',py:'kè',kind:'常用字',story:'「课」是很常用的字，我们常常在「上课」「下课」里见到它。',words:['上课','下课','课本']},
+  {c:'早',py:'zǎo',kind:'常用字',story:'「早」是很常用的字，我们常常在「早上」「早晨」里见到它。',words:['早上','早晨','早点']},
+  {c:'升',py:'shēng',kind:'常用字',story:'「升」是很常用的字，我们常常在「升起」「上升」里见到它。',words:['升起','上升','升旗']},
+  {c:'国',py:'guó',kind:'常用字',story:'「国」是很常用的字，我们常常在「国家」「中国」里见到它。',words:['国家','中国','国旗']},
+  {c:'旗',py:'qí',kind:'常用字',story:'「旗」是很常用的字，我们常常在「国旗」「红旗」里见到它。',words:['国旗','红旗','彩旗']},
+  {c:'中',py:'zhōng',kind:'指事字',story:'一竖穿过方框中间，表示“中”（中间）。',words:['中国','中间','心中']},
+  {c:'们',py:'men',kind:'常用字',story:'「们」是很常用的字，我们常常在「我们」「你们」里见到它。',words:['我们','你们','他们']},
+  {c:'声',py:'shēng',kind:'常用字',story:'「声」是很常用的字，我们常常在「声音」「回声」里见到它。',words:['声音','回声','大声']},
+  {c:'起',py:'qǐ',kind:'常用字',story:'「起」是很常用的字，我们常常在「起来」「起床」里见到它。',words:['起来','起床','一起']},
+  {c:'多',py:'duō',kind:'常用字',story:'「多」是很常用的字，我们常常在「多少」「很多」里见到它。',words:['多少','很多','多云']},
+  {c:'么',py:'me',kind:'常用字',story:'「么」是很常用的字，我们常常在「什么」「怎么」里见到它。',words:['什么','怎么','这么']},
+  {c:'向',py:'xiàng',kind:'常用字',story:'「向」是很常用的字，我们常常在「方向」「向东」里见到它。',words:['方向','向东','向往']},
+  {c:'立',py:'lì',kind:'常用字',story:'「立」是很常用的字，我们常常在「立正」「站立」里见到它。',words:['立正','站立','立刻']},
+  {c:'老',py:'lǎo',kind:'常用字',story:'「老」是很常用的字，我们常常在「老师」「老人」里见到它。',words:['老师','老人','老狗']},
+  {c:'师',py:'shī',kind:'常用字',story:'「师」是很常用的字，我们常常在「老师」「师长」里见到它。',words:['老师','师长','师父']},
+  {c:'工',py:'gōng',kind:'常用字',story:'「工」是很常用的字，我们常常在「工人」「工厂」里见到它。',words:['工人','工厂','工作']},
+  {c:'厂',py:'chǎng',kind:'常用字',story:'「厂」是很常用的字，我们常常在「工厂」「厂房」里见到它。',words:['工厂','厂房','厂长']},
+  {c:'医',py:'yī',kind:'常用字',story:'「医」是很常用的字，我们常常在「医生」「医院」里见到它。',words:['医生','医院','医术']},
+  {c:'院',py:'yuàn',kind:'常用字',story:'「院」是很常用的字，我们常常在「医院」「院子」里见到它。',words:['医院','院子','学院']},
+  {c:'生',py:'shēng',kind:'常用字',story:'「生」是很常用的字，我们常常在「学生」「生日」里见到它。',words:['学生','生日','生活']},
+  {c:'门',py:'mén',kind:'象形字',story:'两扇门板立在两边，就是“门”。',words:['大门','门口','开门']},
+  {c:'卫',py:'wèi',kind:'常用字',story:'「卫」是很常用的字，我们常常在「卫生」「卫士」里见到它。',words:['卫生','卫士','保卫']},
+  {c:'船',py:'chuán',kind:'常用字',story:'「船」是很常用的字，我们常常在「小船」「飞船」里见到它。',words:['小船','飞船','船长']},
+  {c:'弯',py:'wān',kind:'常用字',story:'「弯」是很常用的字，我们常常在「弯月」「弯路」里见到它。',words:['弯月','弯路','弯腰']},
+  {c:'儿',py:'ér',kind:'常用字',story:'「儿」是很常用的字，我们常常在「儿子」「女儿」里见到它。',words:['儿子','女儿','月儿']},
+  {c:'两',py:'liǎng',kind:'常用字',story:'「两」是很常用的字，我们常常在「两个」「两天」里见到它。',words:['两个','两天','两头']},
+  {c:'头',py:'tóu',kind:'常用字',story:'「头」是很常用的字，我们常常在「头发」「木头」里见到它。',words:['头发','木头','头巾']},
+  {c:'在',py:'zài',kind:'常用字',story:'「在」是很常用的字，我们常常在「现在」「在家」里见到它。',words:['现在','在家','正在']},
+  {c:'里',py:'lǐ',kind:'常用字',story:'「里」是很常用的字，我们常常在「里面」「哪里」里见到它。',words:['里面','哪里','心里']},
+  {c:'看',py:'kàn',kind:'常用字',story:'「看」是很常用的字，我们常常在「看见」「看书」里见到它。',words:['看见','看书','好看']},
+  {c:'见',py:'jiàn',kind:'常用字',story:'「见」是很常用的字，我们常常在「看见」「见面」里见到它。',words:['看见','见面','听见']},
+  {c:'闪',py:'shǎn',kind:'常用字',story:'「闪」是很常用的字，我们常常在「闪电」「闪亮」里见到它。',words:['闪电','闪亮','闪光']},
+  {c:'影',py:'yǐng',kind:'常用字',story:'「影」是很常用的字，我们常常在「影子」「电影」里见到它。',words:['影子','电影','身影']},
+  {c:'前',py:'qián',kind:'常用字',story:'「前」是很常用的字，我们常常在「前面」「前后」里见到它。',words:['前面','前后','从前']},
+  {c:'常',py:'cháng',kind:'常用字',story:'「常」是很常用的字，我们常常在「常常」「经常」里见到它。',words:['常常','经常','平常']},
+  {c:'黑',py:'hēi',kind:'常用字',story:'「黑」是很常用的字，我们常常在「黑色」「黑夜」里见到它。',words:['黑色','黑夜','黑板']},
+  {c:'狗',py:'gǒu',kind:'常用字',story:'「狗」是很常用的字，我们常常在「小狗」「黑狗」里见到它。',words:['小狗','黑狗','狗毛']},
+  {c:'左',py:'zuǒ',kind:'常用字',story:'「左」是很常用的字，我们常常在「左右」「左边」里见到它。',words:['左右','左边','左手']},
+  {c:'右',py:'yòu',kind:'常用字',story:'「右」是很常用的字，我们常常在「左右」「右边」里见到它。',words:['左右','右边','右手']},
+  {c:'它',py:'tā',kind:'常用字',story:'「它」是很常用的字，我们常常在「它们」「它的」里见到它。',words:['它们','它的']},
+  {c:'好',py:'hǎo',kind:'常用字',story:'「好」是很常用的字，我们常常在「好人」「你好」里见到它。',words:['好人','你好','好朋友']},
+  {c:'朋',py:'péng',kind:'常用字',story:'「朋」是很常用的字，我们常常在「朋友」「好朋友」里见到它。',words:['朋友','好朋友']},
+  {c:'友',py:'yǒu',kind:'常用字',story:'「友」是很常用的字，我们常常在「朋友」「好友」里见到它。',words:['朋友','好友','友爱']},
+  {c:'件',py:'jiàn',kind:'常用字',story:'「件」是很常用的字，我们常常在「一件」「文件」里见到它。',words:['一件','文件','事件']},
+  {c:'有',py:'yǒu',kind:'常用字',story:'「有」是很常用的字，我们常常在「没有」「有用」里见到它。',words:['没有','有用','还有']},
+  {c:'和',py:'hé',kind:'常用字',story:'「和」是很常用的字，我们常常在「和平」「和好」里见到它。',words:['和平','和好','我和你']},
+  {c:'做',py:'zuò',kind:'常用字',story:'「做」是很常用的字，我们常常在「做工」「做事」里见到它。',words:['做工','做事','做客']},
+  {c:'也',py:'yě',kind:'常用字',story:'「也」是很常用的字，我们常常在「也是」「也好」里见到它。',words:['也是','也好','也能']},
+  {c:'办',py:'bàn',kind:'常用字',story:'「办」是很常用的字，我们常常在「办法」「办公」里见到它。',words:['办法','办公','办事']},
+  {c:'到',py:'dào',kind:'常用字',story:'「到」是很常用的字，我们常常在「到了」「回到」里见到它。',words:['到了','回到','到处']},
+  {c:'又',py:'yòu',kind:'常用字',story:'「又」是很常用的字，我们常常在「又是」「又大又红」里见到它。',words:['又是','又大又红']},
+  {c:'才',py:'cái',kind:'常用字',story:'「才」是很常用的字，我们常常在「才干」「才能」里见到它。',words:['才干','才能','刚才']},
+  {c:'能',py:'néng',kind:'常用字',story:'「能」是很常用的字，我们常常在「能力」「能干」里见到它。',words:['能力','能干','不能']},
+  {c:'爷',py:'yé',kind:'常用字',story:'「爷」是很常用的字，我们常常在「爷爷」「大爷」里见到它。',words:['爷爷','大爷']},
+  {c:'奶',py:'nǎi',kind:'常用字',story:'「奶」是很常用的字，我们常常在「奶奶」「牛奶」里见到它。',words:['奶奶','牛奶','奶茶']},
+  {c:'叔',py:'shū',kind:'常用字',story:'「叔」是很常用的字，我们常常在「叔叔」「大叔」里见到它。',words:['叔叔','大叔']},
+  {c:'姐',py:'jiě',kind:'常用字',story:'「姐」是很常用的字，我们常常在「姐姐」「大姐」里见到它。',words:['姐姐','大姐']},
+  {c:'妹',py:'mèi',kind:'常用字',story:'「妹」是很常用的字，我们常常在「妹妹」「姐妹」里见到它。',words:['妹妹','姐妹']},
+  {c:'比',py:'bǐ',kind:'常用字',story:'「比」是很常用的字，我们常常在「比赛」「比较」里见到它。',words:['比赛','比较','比一比']},
+  {c:'尾',py:'wěi',kind:'常用字',story:'「尾」是很常用的字，我们常常在「尾巴」「尾声」里见到它。',words:['尾巴','尾声','结尾']},
+  {c:'巴',py:'bā',kind:'常用字',story:'「巴」是很常用的字，我们常常在「尾巴」「巴掌」里见到它。',words:['尾巴','巴掌','泥巴']},
+  {c:'谁',py:'shuí',kind:'常用字',story:'「谁」是很常用的字，我们常常在「是谁」「谁呀」里见到它。',words:['是谁','谁呀']},
+  {c:'长',py:'cháng',kind:'常用字',story:'「长」是很常用的字，我们常常在「长短」「长处」里见到它。',words:['长短','长处','长发']},
+  {c:'短',py:'duǎn',kind:'常用字',story:'「短」是很常用的字，我们常常在「长短」「短处」里见到它。',words:['长短','短处','短发']},
+  {c:'把',py:'bǎ',kind:'常用字',story:'「把」是很常用的字，我们常常在「一把」「把门」里见到它。',words:['一把','把门','把手']},
+  {c:'伞',py:'sǎn',kind:'象形字',story:'伞面撑开，下面一根柄，就是“伞”。',words:['雨伞','打伞','小伞']},
+  {c:'兔',py:'tù',kind:'常用字',story:'「兔」是很常用的字，我们常常在「兔子」「白兔」里见到它。',words:['兔子','白兔','小兔']},
+  {c:'最',py:'zuì',kind:'常用字',story:'「最」是很常用的字，我们常常在「最好」「最大」里见到它。',words:['最好','最大','最多']},
+  {c:'公',py:'gōng',kind:'常用字',story:'「公」是很常用的字，我们常常在「公鸡」「公园」里见到它。',words:['公鸡','公园','公共']},
+  {c:'喝',py:'hē',kind:'常用字',story:'「喝」是很常用的字，我们常常在「喝水」「喝茶」里见到它。',words:['喝水','喝茶','喝汤']},
+  {c:'只',py:'zhī',kind:'常用字',story:'「只」是很常用的字，我们常常在「只有」「一只」里见到它。',words:['只有','一只','只好']},
+  {c:'处',py:'chù',kind:'常用字',story:'「处」是很常用的字，我们常常在「到处」「好处」里见到它。',words:['到处','好处','用处']},
+  {c:'找',py:'zhǎo',kind:'常用字',story:'「找」是很常用的字，我们常常在「找到」「寻找」里见到它。',words:['找到','寻找','找人']},
+  {c:'许',py:'xǔ',kind:'常用字',story:'「许」是很常用的字，我们常常在「许多」「也许」里见到它。',words:['许多','也许','许可']},
+  {c:'石',py:'shí',kind:'象形字',story:'山崖下掉下的石块，画成“石”。',words:['石头','石子','玉石']},
+  {c:'出',py:'chū',kind:'常用字',story:'「出」是很常用的字，我们常常在「出去」「出门」里见到它。',words:['出去','出门','日出']},
+  {c:'法',py:'fǎ',kind:'常用字',story:'「法」是很常用的字，我们常常在「办法」「做法」里见到它。',words:['办法','做法','加法']},
+  {c:'放',py:'fàng',kind:'常用字',story:'「放」是很常用的字，我们常常在「放学」「放心」里见到它。',words:['放学','放心','放下']},
+  {c:'进',py:'jìn',kind:'常用字',story:'「进」是很常用的字，我们常常在「进去」「进来」里见到它。',words:['进去','进来','进步']},
+  {c:'高',py:'gāo',kind:'常用字',story:'「高」是很常用的字，我们常常在「高兴」「高山」里见到它。',words:['高兴','高山','高大']},
+  {c:'点',py:'diǎn',kind:'常用字',story:'「点」是很常用的字，我们常常在「点头」「点心」里见到它。',words:['点头','点心','一点']},
+  {c:'彩',py:'cǎi',kind:'常用字',story:'「彩」是很常用的字，我们常常在「彩色」「彩虹」里见到它。',words:['彩色','彩虹','光彩']},
+  {c:'半',py:'bàn',kind:'常用字',story:'「半」是很常用的字，我们常常在「一半」「半天」里见到它。',words:['一半','半天','半个']},
+  {c:'空',py:'kōng',kind:'常用字',story:'「空」是很常用的字，我们常常在「天空」「空中」里见到它。',words:['天空','空中','空气']},
+  {c:'问',py:'wèn',kind:'常用字',story:'「问」是很常用的字，我们常常在「问题」「问好」里见到它。',words:['问题','问好','请问']},
+  {c:'回',py:'huí',kind:'常用字',story:'「回」是很常用的字，我们常常在「回来」「回家」里见到它。',words:['回来','回家','回头']},
+  {c:'答',py:'dá',kind:'常用字',story:'「答」是很常用的字，我们常常在「回答」「答案」里见到它。',words:['回答','答案','问答']},
+  {c:'方',py:'fāng',kind:'常用字',story:'「方」是很常用的字，我们常常在「方向」「方形」里见到它。',words:['方向','方形','地方']},
+  {c:'久',py:'jiǔ',kind:'常用字',story:'「久」是很常用的字，我们常常在「不久」「好久」里见到它。',words:['不久','好久','多久']},
+  {c:'更',py:'gèng',kind:'常用字',story:'「更」是很常用的字，我们常常在「更好」「更多」里见到它。',words:['更好','更多','更加']},
+  {c:'牛',py:'niú',kind:'象形字',story:'牛头上一对尖角，画成“牛”。',words:['水牛','牛奶','牛角']},
+  {c:'羊',py:'yáng',kind:'象形字',story:'羊头弯弯的角是它的记号，画成“羊”。',words:['山羊','小羊','羊毛']},
+  {c:'爪',py:'zhǎo',kind:'常用字',story:'「爪」是很常用的字，我们常常在「爪子」「鸡爪」里见到它。',words:['爪子','鸡爪','猫爪']},
+  {c:'元',py:'yuán',kind:'常用字',story:'「元」是很常用的字，我们常常在「一元」「元旦」里见到它。',words:['一元','元旦','元宝']},
+  {c:'拼',py:'pīn',kind:'常用字',story:'「拼」是很常用的字，我们常常在「拼音」「拼写」里见到它。',words:['拼音','拼写','拼图']},
+  {c:'音',py:'yīn',kind:'常用字',story:'「音」是很常用的字，我们常常在「声音」「音乐」里见到它。',words:['声音','音乐','拼音']},
+  {c:'时',py:'shí',kind:'拓展字',story:'「时」是很常用的字，我们常常在「时间」「时候」里见到它。',words:["时间","时候","同时"],extra:true},
+  {c:'为',py:'wèi',kind:'拓展字',story:'「为」是很常用的字，我们常常在「因为」「为了」里见到它。',words:["因为","为了","为什么"],extra:true},
+  {c:'那',py:'nà',kind:'拓展字',story:'「那」是很常用的字，我们常常在「那里」「那些」里见到它。',words:["那里","那些","那个"],extra:true},
+  {c:'要',py:'yào',kind:'拓展字',story:'「要」是很常用的字，我们常常在「不要」「只要」里见到它。',words:["不要","只要","主要"],extra:true},
+  {c:'以',py:'yǐ',kind:'拓展字',story:'「以」是很常用的字，我们常常在「可以」「以后」里见到它。',words:["可以","以后","以前"],extra:true},
+  {c:'道',py:'dào',kind:'拓展字',story:'「道」是很常用的字，我们常常在「知道」「道路」里见到它。',words:["知道","道路","道理"],extra:true},
+  {c:'全',py:'quán',kind:'拓展字',story:'「全」是很常用的字，我们常常在「全部」「完全」里见到它。',words:["全部","完全","安全"],extra:true},
+  {c:'而',py:'ér',kind:'拓展字',story:'「而」是很常用的字，我们常常在「而且」「然而」里见到它。',words:["而且","然而","反而"],extra:true},
+  {c:'等',py:'děng',kind:'拓展字',story:'「等」是很常用的字，我们常常在「等到」「等于」里见到它。',words:["等到","等于","相等"],extra:true},
+  {c:'吃',py:'chī',kind:'拓展字',story:'「吃」是很常用的字，我们常常在「吃饭」「好吃」里见到它。',words:["吃饭","好吃","吃力"],extra:true},
+  {c:'让',py:'ràng',kind:'拓展字',story:'「让」是很常用的字，我们常常在「让开」「让步」里见到它。',words:["让开","让步","让座"],extra:true},
+  {c:'还',py:'hái',kind:'拓展字',story:'「还」是很常用的字，我们常常在「还有」「还是」里见到它。',words:["还有","还是","还在"],extra:true},
+  {c:'给',py:'gěi',kind:'拓展字',story:'「给」是很常用的字，我们常常在「给我」「交给」里见到它。',words:["给我","交给","送给"],extra:true},
+  {c:'被',py:'bèi',kind:'拓展字',story:'「被」是很常用的字，我们常常在「被子」「被动」里见到它。',words:["被子","被动","被窝"],extra:true},
+  {c:'跟',py:'gēn',kind:'拓展字',story:'「跟」是很常用的字，我们常常在「跟着」「跟前」里见到它。',words:["跟着","跟前","脚后跟"],extra:true},
+  {c:'已',py:'yǐ',kind:'拓展字',story:'「已」是很常用的字，我们常常在「已经」「早已」里见到它。',words:["已经","早已","已然"],extra:true},
+  {c:'都',py:'dōu',kind:'拓展字',story:'「都」是很常用的字，我们常常在「都是」「都有」里见到它。',words:["都是","都有","全都"],extra:true},
+  {c:'样',py:'yàng',kind:'拓展字',story:'「样」是很常用的字，我们常常在「样子」「一样」里见到它。',words:["样子","一样","这样"],extra:true},
+  {c:'得',py:'dé',kind:'拓展字',story:'「得」是很常用的字，我们常常在「得到」「得意」里见到它。',words:["得到","得意","取得"],extra:true},
+  {c:'过',py:'guò',kind:'拓展字',story:'「过」是很常用的字，我们常常在「过去」「过桥」里见到它。',words:["过去","过桥","走过"],extra:true},
+  {c:'之',py:'zhī',kind:'拓展字',story:'「之」是很常用的字，我们常常在「之前」「之后」里见到它。',words:["之前","之后","之间"],extra:true},
+  {c:'真',py:'zhēn',kind:'拓展字',story:'「真」是很常用的字，我们常常在「真的」「认真」里见到它。',words:["真的","认真","天真"],extra:true},
+  {c:'己',py:'jǐ',kind:'拓展字',story:'「己」是很常用的字，我们常常在「自己」「知己」里见到它。',words:["自己","知己"],extra:true},
+  {c:'很',py:'hěn',kind:'拓展字',story:'「很」是很常用的字，我们常常在「很多」「很好」里见到它。',words:["很多","很好","很少"],extra:true},
+  {c:'叫',py:'jiào',kind:'拓展字',story:'「叫」是很常用的字，我们常常在「叫喊」「大叫」里见到它。',words:["叫喊","大叫","叫声"],extra:true},
+  {c:'再',py:'zài',kind:'拓展字',story:'「再」是很常用的字，我们常常在「再见」「再次」里见到它。',words:["再见","再次","再来"],extra:true},
+  {c:'哪',py:'nǎ',kind:'拓展字',story:'「哪」是很常用的字，我们常常在「哪里」「哪个」里见到它。',words:["哪里","哪个","哪些"],extra:true},
+  {c:'同',py:'tóng',kind:'拓展字',story:'「同」是很常用的字，我们常常在「同学」「同伴」里见到它。',words:["同学","同伴","同意"],extra:true},
+  {c:'现',py:'xiàn',kind:'拓展字',story:'「现」是很常用的字，我们常常在「现在」「发现」里见到它。',words:["现在","发现","出现"],extra:true},
+  {c:'因',py:'yīn',kind:'拓展字',story:'「因」是很常用的字，我们常常在「因为」「原因」里见到它。',words:["因为","原因","因果"],extra:true},
+  {c:'但',py:'dàn',kind:'拓展字',story:'「但」是很常用的字，我们常常在「但是」「不但」里见到它。',words:["但是","不但","但愿"],extra:true},
+  {c:'些',py:'xiē',kind:'拓展字',story:'「些」是很常用的字，我们常常在「一些」「这些」里见到它。',words:["一些","这些","那些"],extra:true},
+  {c:'她',py:'tā',kind:'拓展字',story:'「她」是很常用的字，我们常常在「她们」「她的」里见到它。',words:["她们","她的"],extra:true},
+  {c:'分',py:'fēn',kind:'拓展字',story:'「分」是很常用的字，我们常常在「分开」「分数」里见到它。',words:["分开","分数","十分"],extra:true},
+  {c:'次',py:'cì',kind:'拓展字',story:'「次」是很常用的字，我们常常在「次数」「下次」里见到它。',words:["次数","下次","一次"],extra:true},
+  {c:'觉',py:'jiào',kind:'拓展字',story:'「觉」是很常用的字，我们常常在「睡觉」「午觉」里见到它。',words:["睡觉","午觉"],extra:true},
+  {c:'睡',py:'shuì',kind:'拓展字',story:'「睡」是很常用的字，我们常常在「睡觉」「午睡」里见到它。',words:["睡觉","午睡","睡着"],extra:true},
+  {c:'笑',py:'xiào',kind:'拓展字',story:'「笑」是很常用的字，我们常常在「笑话」「大笑」里见到它。',words:["笑话","大笑","笑脸"],extra:true},
+  {c:'哭',py:'kū',kind:'拓展字',story:'「哭」是很常用的字，我们常常在「哭泣」「哭声」里见到它。',words:["哭泣","哭声"],extra:true},
+  {c:'跑',py:'pǎo',kind:'拓展字',story:'「跑」是很常用的字，我们常常在「跑步」「奔跑」里见到它。',words:["跑步","奔跑","跑车"],extra:true},
+  {c:'跳',py:'tiào',kind:'拓展字',story:'「跳」是很常用的字，我们常常在「跳舞」「跳高」里见到它。',words:["跳舞","跳高","心跳"],extra:true},
+  {c:'走',py:'zǒu',kind:'拓展字',story:'「走」是很常用的字，我们常常在「走路」「走开」里见到它。',words:["走路","走开","行走"],extra:true},
+  {c:'毛',py:'máo',kind:'拓展字',story:'「毛」是很常用的字，我们常常在「毛巾」「毛笔」里见到它。',words:["毛巾","毛笔","羽毛"],extra:true},
+  {c:'巾',py:'jīn',kind:'拓展字',story:'「巾」是很常用的字，我们常常在「毛巾」「头巾」里见到它。',words:["毛巾","头巾","围巾"],extra:true},
+  {c:'杯',py:'bēi',kind:'拓展字',story:'「杯」是很常用的字，我们常常在「杯子」「水杯」里见到它。',words:["杯子","水杯","茶杯"],extra:true},
+  {c:'碗',py:'wǎn',kind:'拓展字',story:'「碗」是很常用的字，我们常常在「碗筷」「饭碗」里见到它。',words:["碗筷","饭碗","洗碗"],extra:true},
+  {c:'筷',py:'kuài',kind:'拓展字',story:'「筷」是很常用的字，我们常常在「筷子」「碗筷」里见到它。',words:["筷子","碗筷"],extra:true},
+  {c:'饭',py:'fàn',kind:'拓展字',story:'「饭」是很常用的字，我们常常在「吃饭」「米饭」里见到它。',words:["吃饭","米饭","做饭"],extra:true},
+  {c:'肉',py:'ròu',kind:'拓展字',story:'「肉」是很常用的字，我们常常在「牛肉」「羊肉」里见到它。',words:["牛肉","羊肉","肉丸"],extra:true},
+  {c:'蛋',py:'dàn',kind:'拓展字',story:'「蛋」是很常用的字，我们常常在「鸡蛋」「鸭蛋」里见到它。',words:["鸡蛋","鸭蛋","蛋糕"],extra:true},
+  {c:'糖',py:'táng',kind:'拓展字',story:'「糖」是很常用的字，我们常常在「糖果」「白糖」里见到它。',words:["糖果","白糖","红糖"],extra:true},
+  {c:'衣',py:'yī',kind:'拓展字',story:'「衣」是很常用的字，我们常常在「衣服」「上衣」里见到它。',words:["衣服","上衣","大衣"],extra:true},
+  {c:'裤',py:'kù',kind:'拓展字',story:'「裤」是很常用的字，我们常常在「裤子」「短裤」里见到它。',words:["裤子","短裤","长裤"],extra:true},
+  {c:'鞋',py:'xié',kind:'拓展字',story:'「鞋」是很常用的字，我们常常在「鞋子」「皮鞋」里见到它。',words:["鞋子","皮鞋","拖鞋"],extra:true},
+  {c:'帽',py:'mào',kind:'拓展字',story:'「帽」是很常用的字，我们常常在「帽子」「草帽」里见到它。',words:["帽子","草帽","衣帽"],extra:true},
+  {c:'袜',py:'wà',kind:'拓展字',story:'「袜」是很常用的字，我们常常在「袜子」「袜筒」里见到它。',words:["袜子","袜筒"],extra:true},
+  {c:'床',py:'chuáng',kind:'拓展字',story:'「床」是很常用的字，我们常常在「床铺」「起床」里见到它。',words:["床铺","起床","床上"],extra:true},
+  {c:'灯',py:'dēng',kind:'拓展字',story:'「灯」是很常用的字，我们常常在「电灯」「台灯」里见到它。',words:["电灯","台灯","灯光"],extra:true},
+  {c:'窗',py:'chuāng',kind:'拓展字',story:'「窗」是很常用的字，我们常常在「窗户」「窗台」里见到它。',words:["窗户","窗台","门窗"],extra:true},
+  {c:'椅',py:'yǐ',kind:'拓展字',story:'「椅」是很常用的字，我们常常在「椅子」「桌椅」里见到它。',words:["椅子","桌椅"],extra:true},
+  {c:'钟',py:'zhōng',kind:'拓展字',story:'「钟」是很常用的字，我们常常在「钟表」「时钟」里见到它。',words:["钟表","时钟","钟声"],extra:true},
+  {c:'表',py:'biǎo',kind:'拓展字',story:'「表」是很常用的字，我们常常在「手表」「表格」里见到它。',words:["手表","表格","表现"],extra:true},
+  {c:'药',py:'yào',kind:'拓展字',story:'「药」是很常用的字，我们常常在「吃药」「药品」里见到它。',words:["吃药","药品","药材"],extra:true},
+  {c:'阳',py:'yáng',kind:'拓展字',story:'「阳」是很常用的字，我们常常在「太阳」「阳光」里见到它。',words:["太阳","阳光","阳伞"],extra:true},
+  {c:'光',py:'guāng',kind:'拓展字',story:'「光」是很常用的字，我们常常在「阳光」「月光」里见到它。',words:["阳光","月光","灯光"],extra:true},
+  {c:'电',py:'diàn',kind:'拓展字',story:'「电」是很常用的字，我们常常在「电话」「电灯」里见到它。',words:["电话","电灯","电视"],extra:true},
+  {c:'视',py:'shì',kind:'拓展字',story:'「视」是很常用的字，我们常常在「电视」「视力」里见到它。',words:["电视","视力","视线"],extra:true},
+  {c:'脑',py:'nǎo',kind:'拓展字',story:'「脑」是很常用的字，我们常常在「电脑」「大脑」里见到它。',words:["电脑","大脑","脑筋"],extra:true},
+  {c:'机',py:'jī',kind:'拓展字',story:'「机」是很常用的字，我们常常在「飞机」「手机」里见到它。',words:["飞机","手机","机器"],extra:true},
+  {c:'话',py:'huà',kind:'拓展字',story:'「话」是很常用的字，我们常常在「说话」「电话」里见到它。',words:["说话","电话","童话"],extra:true},
+  {c:'乐',py:'lè',kind:'拓展字',story:'「乐」是很常用的字，我们常常在「快乐」「音乐」里见到它。',words:["快乐","音乐","乐意"],extra:true},
+  {c:'舞',py:'wǔ',kind:'拓展字',story:'「舞」是很常用的字，我们常常在「跳舞」「飞舞」里见到它。',words:["跳舞","飞舞","舞动"],extra:true},
+  {c:'球',py:'qiú',kind:'拓展字',story:'「球」是很常用的字，我们常常在「皮球」「气球」里见到它。',words:["皮球","气球","足球"],extra:true},
+  {c:'户',py:'hù',kind:'拓展字',story:'「户」是很常用的字，我们常常在「窗户」「户口」里见到它。',words:["窗户","户口"],extra:true},
+  {c:'墙',py:'qiáng',kind:'拓展字',story:'「墙」是很常用的字，我们常常在「墙壁」「城墙」里见到它。',words:["墙壁","城墙","墙上"],extra:true},
+  {c:'房',py:'fáng',kind:'拓展字',story:'「房」是很常用的字，我们常常在「房子」「房间」里见到它。',words:["房子","房间","房门"],extra:true},
+  {c:'屋',py:'wū',kind:'拓展字',story:'「屋」是很常用的字，我们常常在「屋子」「房屋」里见到它。',words:["屋子","房屋","屋顶"],extra:true},
+  {c:'园',py:'yuán',kind:'拓展字',story:'「园」是很常用的字，我们常常在「公园」「花园」里见到它。',words:["公园","花园","果园"],extra:true},
+  {c:'城',py:'chéng',kind:'拓展字',story:'「城」是很常用的字，我们常常在「城市」「城墙」里见到它。',words:["城市","城墙","长城"],extra:true},
+  {c:'市',py:'shì',kind:'拓展字',story:'「市」是很常用的字，我们常常在「城市」「市场」里见到它。',words:["城市","市场","超市"],extra:true},
+  {c:'场',py:'chǎng',kind:'拓展字',story:'「场」是很常用的字，我们常常在「操场」「场地」里见到它。',words:["操场","场地","广场"],extra:true},
+  {c:'超',py:'chāo',kind:'拓展字',story:'「超」是很常用的字，我们常常在「超市」「超过」里见到它。',words:["超市","超过","超级"],extra:true},
+  {c:'票',py:'piào',kind:'拓展字',story:'「票」是很常用的字，我们常常在「门票」「车票」里见到它。',words:["门票","车票","邮票"],extra:true},
+  {c:'钱',py:'qián',kind:'拓展字',story:'「钱」是很常用的字，我们常常在「花钱」「钱币」里见到它。',words:["花钱","钱币","钱包"],extra:true},
+  {c:'买',py:'mǎi',kind:'拓展字',story:'「买」是很常用的字，我们常常在「买菜」「买书」里见到它。',words:["买菜","买书","买东西"],extra:true},
+  {c:'卖',py:'mài',kind:'拓展字',story:'「卖」是很常用的字，我们常常在「卖东西」「卖书」里见到它。',words:["卖东西","卖书"],extra:true},
+  {c:'街',py:'jiē',kind:'拓展字',story:'「街」是很常用的字，我们常常在「街道」「上街」里见到它。',words:["街道","上街","街头"],extra:true},
+  {c:'冷',py:'lěng',kind:'拓展字',story:'「冷」是很常用的字，我们常常在「冷水」「天冷」里见到它。',words:["冷水","天冷","寒冷"],extra:true},
+  {c:'热',py:'rè',kind:'拓展字',story:'「热」是很常用的字，我们常常在「热水」「天热」里见到它。',words:["热水","天热","热闹"],extra:true},
+  {c:'暖',py:'nuǎn',kind:'拓展字',story:'「暖」是很常用的字，我们常常在「温暖」「暖和」里见到它。',words:["温暖","暖和","暖风"],extra:true},
+  {c:'凉',py:'liáng',kind:'拓展字',story:'「凉」是很常用的字，我们常常在「凉水」「凉快」里见到它。',words:["凉水","凉快","清凉"],extra:true},
+  {c:'晴',py:'qíng',kind:'拓展字',story:'「晴」是很常用的字，我们常常在「晴天」「晴朗」里见到它。',words:["晴天","晴朗","放晴"],extra:true},
+  {c:'阴',py:'yīn',kind:'拓展字',story:'「阴」是很常用的字，我们常常在「阴天」「阴雨」里见到它。',words:["阴天","阴雨"],extra:true},
+  {c:'雷',py:'léi',kind:'拓展字',story:'「雷」是很常用的字，我们常常在「打雷」「雷声」里见到它。',words:["打雷","雷声"],extra:true},
+  {c:'晨',py:'chén',kind:'拓展字',story:'「晨」是很常用的字，我们常常在「早晨」「清晨」里见到它。',words:["早晨","清晨","晨光"],extra:true},
+  {c:'亮',py:'liàng',kind:'拓展字',story:'「亮」是很常用的字，我们常常在「月亮」「明亮」里见到它。',words:["月亮","明亮","亮光"],extra:true},
+  {c:'暗',py:'àn',kind:'拓展字',story:'「暗」是很常用的字，我们常常在「黑暗」「暗处」里见到它。',words:["黑暗","暗处"],extra:true},
+  {c:'轻',py:'qīng',kind:'拓展字',story:'「轻」是很常用的字，我们常常在「轻轻」「轻松」里见到它。',words:["轻轻","轻松","年轻"],extra:true},
+  {c:'重',py:'zhòng',kind:'拓展字',story:'「重」是很常用的字，我们常常在「重要」「重心」里见到它。',words:["重要","重心","重量"],extra:true},
+  {c:'快',py:'kuài',kind:'拓展字',story:'「快」是很常用的字，我们常常在「快乐」「飞快」里见到它。',words:["快乐","飞快","快点"],extra:true},
+  {c:'慢',py:'màn',kind:'拓展字',story:'「慢」是很常用的字，我们常常在「慢慢」「慢跑」里见到它。',words:["慢慢","慢跑","慢车"],extra:true},
+  {c:'低',py:'dī',kind:'拓展字',story:'「低」是很常用的字，我们常常在「低头」「高低」里见到它。',words:["低头","高低","低声"],extra:true},
+  {c:'远',py:'yuǎn',kind:'拓展字',story:'「远」是很常用的字，我们常常在「远近」「远处」里见到它。',words:["远近","远处","远方"],extra:true},
+  {c:'近',py:'jìn',kind:'拓展字',story:'「近」是很常用的字，我们常常在「远近」「近处」里见到它。',words:["远近","近处","靠近"],extra:true},
+  {c:'新',py:'xīn',kind:'拓展字',story:'「新」是很常用的字，我们常常在「新年」「新鲜」里见到它。',words:["新年","新鲜","新闻"],extra:true},
+  {c:'旧',py:'jiù',kind:'拓展字',story:'「旧」是很常用的字，我们常常在「新旧」「旧书」里见到它。',words:["新旧","旧书","依旧"],extra:true},
+  {c:'坏',py:'huài',kind:'拓展字',story:'「坏」是很常用的字，我们常常在「坏人」「坏掉」里见到它。',words:["坏人","坏掉","好坏"],extra:true},
+  {c:'旁',py:'páng',kind:'拓展字',story:'「旁」是很常用的字，我们常常在「旁边」「路旁」里见到它。',words:["旁边","路旁","身旁"],extra:true},
+  {c:'边',py:'biān',kind:'拓展字',story:'「边」是很常用的字，我们常常在「旁边」「一边」里见到它。',words:["旁边","一边","河边"],extra:true},
+  {c:'周',py:'zhōu',kind:'拓展字',story:'「周」是很常用的字，我们常常在「周围」「周末」里见到它。',words:["周围","周末","周到"],extra:true},
+  {c:'围',py:'wéi',kind:'拓展字',story:'「围」是很常用的字，我们常常在「周围」「包围」里见到它。',words:["周围","包围","围巾"],extra:true},
+  {c:'圆',py:'yuán',kind:'拓展字',story:'「圆」是很常用的字，我们常常在「圆形」「团圆」里见到它。',words:["圆形","团圆","圆月"],extra:true},
+  {c:'平',py:'píng',kind:'拓展字',story:'「平」是很常用的字，我们常常在「平安」「水平」里见到它。',words:["平安","水平","平地"],extra:true},
+  {c:'直',py:'zhí',kind:'拓展字',story:'「直」是很常用的字，我们常常在「一直」「直尺」里见到它。',words:["一直","直尺","直线"],extra:true},
+  {c:'粉',py:'fěn',kind:'拓展字',story:'「粉」是很常用的字，我们常常在「粉色」「花粉」里见到它。',words:["粉色","花粉","奶粉"],extra:true},
+  {c:'紫',py:'zǐ',kind:'拓展字',story:'「紫」是很常用的字，我们常常在「紫色」「紫菜」里见到它。',words:["紫色","紫菜"],extra:true},
+  {c:'橙',py:'chéng',kind:'拓展字',story:'「橙」是很常用的字，我们常常在「橙色」「橙子」里见到它。',words:["橙色","橙子"],extra:true},
+  {c:'灰',py:'huī',kind:'拓展字',story:'「灰」是很常用的字，我们常常在「灰色」「灰尘」里见到它。',words:["灰色","灰尘"],extra:true},
+  {c:'银',py:'yín',kind:'拓展字',story:'「银」是很常用的字，我们常常在「银子」「白银」里见到它。',words:["银子","白银","银色"],extra:true},
+  {c:'铜',py:'tóng',kind:'拓展字',story:'「铜」是很常用的字，我们常常在「铜钱」「铜锣」里见到它。',words:["铜钱","铜锣"],extra:true},
+];
+const CHARMAP = {}; CHARSET.forEach((x,i)=>{x.i=i; CHARMAP[x.c]=x;});
+
+/* ============ 象形字手绘 SVG ============ */
+const INK='#6B4423';
+function svg(inner){return '<svg class="pict" viewBox="0 0 100 100" fill="none" stroke="'+INK+'" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';}
+const PICTS = {
+  '日':svg('<circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="6" fill="'+INK+'" stroke="none"/>'),
+  '月':svg('<path d="M62 18 A36 36 0 1 0 62 82 A28 28 0 1 1 62 18 Z" fill="'+INK+'" stroke="none"/>'),
+  '山':svg('<path d="M10 80 L34 30 L50 56 L66 30 L90 80"/>'),
+  '水':svg('<path d="M15 35 q12 -12 24 0 t24 0"/><path d="M12 52 q12 -12 24 0 t24 0"/><path d="M15 69 q12 -12 24 0 t24 0"/>'),
+  '火':svg('<path d="M50 16 C34 40 42 52 42 62 a11 11 0 0 0 16 0 C58 52 66 40 50 16 Z" fill="'+INK+'" stroke="none"/>'),
+  '木':svg('<line x1="50" y1="14" x2="50" y2="86"/><path d="M50 30 L30 18 M50 30 L70 18"/><path d="M50 70 L32 86 M50 70 L68 86"/>'),
+  '田':svg('<rect x="22" y="22" width="56" height="56"/><line x1="50" y1="22" x2="50" y2="78"/><line x1="22" y1="50" x2="78" y2="50"/>'),
+  '人':svg('<circle cx="50" cy="22" r="9"/><path d="M50 32 L36 84 M50 32 L64 84"/>'),
+  '口':svg('<path d="M30 34 q20 -14 40 0 q-6 30 -20 34 q-14 -4 -20 -34 Z"/>'),
+  '目':svg('<rect x="32" y="24" width="36" height="52" rx="8"/><circle cx="50" cy="50" r="8" fill="'+INK+'" stroke="none"/>'),
+  '耳':svg('<path d="M40 20 q-18 6 -16 28 q2 22 22 30 q10 -2 10 -16 q-8 -6 -8 -18 q0 -14 12 -16 q4 -6 -4 -8 Z"/>'),
+  '心':svg('<path d="M50 78 C20 56 18 34 34 32 C44 31 50 40 50 44 C50 40 56 31 66 32 C82 34 80 56 50 78 Z" fill="'+INK+'" stroke="none"/>'),
+  '手':svg('<path d="M50 84 L50 46"/><path d="M50 46 L34 30 M50 46 L50 22 M50 46 L66 30 M50 46 L74 36"/><path d="M34 30 q-4 -8 4 -10 M50 22 q0 -8 8 -6 M66 30 q4 -7 11 -3 M74 36 q7 -3 9 4"/>'),
+  '足':svg('<path d="M40 18 q14 -4 18 8 q2 12 -6 16 l0 22 q-2 8 -10 8 q-8 0 -8 -8 l0 -22 q-10 -2 -12 -14 q-2 -10 12 -12 Z"/>'),
+  '牛':svg('<rect x="30" y="34" width="40" height="34" rx="6"/><path d="M30 40 q-12 -10 -18 -4 M70 40 q12 -10 18 -4"/>'),
+  '羊':svg('<path d="M50 30 q-6 -18 -20 -14 q4 12 14 12 M50 30 q6 -18 20 -14 q-4 12 -14 12"/><rect x="36" y="34" width="28" height="32" rx="6"/>'),
+  '马':svg('<path d="M32 78 L32 50 q0 -20 16 -24 q10 -3 16 6 q8 2 6 12 l-4 6 q6 4 4 12 l-2 10"/><path d="M60 28 q10 -6 16 2"/>'),
+  '鸟':svg('<path d="M30 60 q-6 -30 22 -34 q26 -2 24 24 q0 16 -14 20 l14 8"/><circle cx="46" cy="36" r="3" fill="'+INK+'" stroke="none"/><path d="M70 50 l10 2"/>'),
+  '鱼':svg('<path d="M20 50 q20 -22 44 0 q-20 22 -44 0 Z"/><path d="M64 50 l16 -12 0 24 Z" fill="'+INK+'" stroke="none"/><circle cx="34" cy="46" r="3" fill="'+INK+'" stroke="none"/>'),
+  '虫':svg('<path d="M50 22 q14 0 14 16 q0 12 -14 12 q-14 0 -14 -12 q0 -16 14 -16 Z"/><path d="M44 60 q6 12 12 0 M40 74 q10 10 20 0"/>'),
+  '门':svg('<path d="M30 18 L30 82 M70 18 L70 82 M30 40 L70 40 M30 62 L70 62"/>'),
+  '刀':svg('<path d="M28 30 q34 -8 48 6 q-10 14 -34 14 l-14 14 Z" fill="'+INK+'" stroke="none"/>'),
+  '弓':svg('<path d="M40 16 q-26 34 0 68"/><path d="M40 16 L40 84"/>'),
+  '云':svg('<path d="M28 64 q-14 0 -14 -14 q0 -14 16 -14 q4 -14 22 -12 q18 0 18 16 q12 2 12 12 q0 12 -16 12 Z"/>'),
+  '雨':svg('<path d="M28 40 q-12 0 -12 -12 q0 -12 14 -12 q4 -12 20 -10 q16 0 16 14 q10 2 10 12 q0 10 -14 10 Z"/><path d="M38 58 l-4 14 M52 58 l-4 14 M66 58 l-4 14"/>'),
+  '石':svg('<path d="M22 70 q-6 -30 22 -36 q34 -8 34 22 q4 22 -22 26 q-22 4 -34 -12 Z"/>'),
+  '川':svg('<path d="M34 18 q-8 30 0 64"/><path d="M66 18 q8 30 0 64"/><path d="M50 16 L50 84"/>'),
+  '舟':svg('<path d="M20 56 q30 16 60 0 l-8 14 q-22 8 -44 0 Z" fill="'+INK+'" stroke="none"/><line x1="50" y1="56" x2="50" y2="26"/>'),
+  '车':svg('<circle cx="34" cy="62" r="14"/><circle cx="66" cy="62" r="14"/><path d="M34 62 L50 40 L66 62 M48 40 L48 30 L60 30"/>'),
+  '网':svg('<rect x="26" y="26" width="48" height="48"/><line x1="50" y1="26" x2="50" y2="74"/><line x1="26" y1="50" x2="74" y2="50"/><line x1="38" y1="26" x2="38" y2="74"/><line x1="62" y1="26" x2="62" y2="74"/>'),
+  '伞':svg('<path d="M22 50 q28 -34 56 0 Z" fill="'+INK+'" stroke="none"/><line x1="50" y1="50" x2="50" y2="82"/><path d="M40 82 L60 82"/>'),
+  '井':svg('<rect x="26" y="26" width="48" height="48"/><line x1="50" y1="26" x2="50" y2="74"/><line x1="26" y1="50" x2="74" y2="50"/>'),
+  '牙':svg('<path d="M38 24 q-8 6 -6 20 q2 22 18 28 q16 -6 18 -28 q2 -14 -6 -20 q-12 -6 -24 0 Z"/>'),
+  '舌':svg('<path d="M40 20 q10 -6 20 0 q6 18 0 36 q-2 12 -10 12 q-8 0 -10 -12 q-6 -18 0 -36 Z"/>'),
+  '瓜':svg('<path d="M50 30 q-22 4 -22 34 q0 18 22 18 q22 0 22 -18 q0 -30 -22 -34 Z" fill="'+INK+'" stroke="none"/><path d="M50 30 q4 -12 14 -14"/>'),
+  '果':svg('<path d="M50 30 q-16 0 -16 18 q0 18 16 18 q16 0 16 -18 q0 -18 -16 -18 Z"/><path d="M50 30 L50 14 M50 18 q8 -6 14 -2"/>'),
+  '米':svg('<line x1="50" y1="20" x2="50" y2="80"/><line x1="26" y1="36" x2="74" y2="64"/><line x1="74" y1="36" x2="26" y2="64"/><circle cx="50" cy="50" r="6" fill="'+INK+'" stroke="none"/>'),
+  '竹':svg('<path d="M36 84 L36 22 M30 40 L42 40 M30 60 L42 60"/><path d="M64 84 L64 22 M58 40 L70 40 M58 60 L70 60"/>'),
+  '禾':svg('<line x1="50" y1="30" x2="50" y2="84"/><path d="M50 40 q-18 -8 -22 -22 M50 40 q18 -8 22 -22 M50 52 q-16 -4 -20 -16 M50 52 q16 -4 20 -16"/>'),
+  '大':svg('<circle cx="50" cy="24" r="8"/><path d="M50 32 L50 60 M50 44 L26 30 M50 44 L74 30 M50 60 L34 84 M50 60 L66 84"/>'),
+  '小':svg('<line x1="50" y1="34" x2="50" y2="80"/><path d="M50 44 L30 28 M50 50 L70 30"/>'),
+  '白':svg('<path d="M34 28 q16 -8 30 2 q4 14 -2 26 q-14 16 -28 6 q-8 -16 0 -34 Z"/>'),
+  '土':svg('<line x1="20" y1="40" x2="80" y2="40"/><path d="M50 40 L50 80 M36 80 L64 80"/>'),
+  '子':svg('<circle cx="40" cy="30" r="10"/><path d="M44 40 q14 4 12 26 q-2 14 -14 14 q-10 0 -10 -10 l14 -2"/>'),
+  '女':svg('<circle cx="50" cy="26" r="8"/><path d="M50 34 q-18 6 -22 30 M50 34 q18 6 22 30 M38 52 q12 14 24 0"/>'),
+  '飞':svg('<path d="M24 64 q14 -34 34 -36 q12 0 18 10 q-10 -2 -16 6 q14 4 20 16 q-16 -8 -28 -2 q-14 6 -28 6 Z"/>')
+};
+function pictSVG(c){ if(PICTS[c]) return PICTS[c]; const cm=CHARMAP[c]; const w=cm&&cm.words?cm.words.slice(0,2).join(' / '):''; return '<div class="nopic"><div class="bigpy">'+(cm?cm.py:'')+'</div><div class="muted" style="font-size:13px">常和「'+w+'」一起用</div></div>'; }
+
+/* ============ 状态与存储 ============ */
+const DATABASE_ID='S2StOn1hT0lod7VOKTGN3S';
+const KEY='wb_literacy_profile_v1';
+const cloudOK = function(){ return !!(window.__SMART_PAGE__ && window.__SMART_PAGE__.database); };
+let profile=null, mode='child', cardsIdx=0, quiz=null, quizDone=0, quizOk=0;
+
+function uid(){return Math.random().toString(36).slice(2,9);}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function daysBetween(a,b){if(!a||!b)return 99;const x=new Date(a),y=new Date(b);return Math.round((y-x)/86400000);}
+
+function seedProfile(){
+  const y=new Date(); y.setDate(y.getDate()-1);
+  const ys=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');
+  return {
+    points:30, dailyGoal:10,
+    learned:['日','月','山'].map(c=>({c,date:ys})),
+    streak:1, lastDate:ys,
+    rewards:[{id:uid(),name:'看动画片15分钟',cost:50},{id:uid(),name:'吃一次冰淇淋',cost:80},{id:uid(),name:'去公园玩一次',cost:120}],
+    pending:[], history:[], voiceCount:0, recordDates:[], skipLearned:true,
+    _id:null, _seeded:true
+  };
+}
+
+function toProps(p){
+  return {
+    累计积分:{number:p.points},
+    已学字:{text:JSON.stringify(p.learned)},
+    当前关卡:{number:Math.floor(p.learned.length/(p.dailyGoal||10))},
+    连续天数:{number:p.streak},
+    最后学习日期:{text:p.lastDate||''},
+    奖励配置:{text:JSON.stringify({rewards:p.rewards,pending:p.pending,history:p.history,voiceCount:p.voiceCount||0,recordDates:p.recordDates||[],skipLearned:p.skipLearned!==false})}
+  };
+}
+function fromProps(rec){
+  const p={points:rec.累计积分||0, dailyGoal:10, learned:[], streak:rec.连续天数||0, lastDate:rec.最后学习日期||'', rewards:[], pending:[], history:[], _id:rec._id};
+  try{p.learned=JSON.parse(rec.已学字||'[]');}catch(e){}
+  try{const r=JSON.parse(rec.奖励配置||'{}'); p.rewards=r.rewards||[]; p.pending=r.pending||[]; p.history=r.history||[]; p.voiceCount=r.voiceCount||0; p.recordDates=r.recordDates||[]; p.skipLearned=r.skipLearned!==false;}catch(e){}
+  return p;
+}
+
+let syncState='offline';
+function setSync(s){
+  syncState=s;
+  const t=document.getElementById('syncText'), i=document.getElementById('syncIcon');
+  if(s==='synced'){t.textContent='已同步'; i.innerHTML='<path d="M6 16a4 4 0 0 1 .8-7.9 5 5 0 0 1 9.6 1.4A3.5 3.5 0 0 1 17 16H6z"/><path d="M8 12l3 3 5-5" stroke="#fff"/>';}
+  else if(s==='syncing'){t.textContent='同步中'; i.innerHTML='<path d="M6 16a4 4 0 0 1 .8-7.9 5 5 0 0 1 9.6 1.4A3.5 3.5 0 0 1 17 16H6z"/>';}
+  else {t.textContent='离线模式'; i.innerHTML='<path d="M6 16a4 4 0 0 1 .8-7.9 5 5 0 0 1 9.6 1.4A3.5 3.5 0 0 1 17 16H6z"/><path d="M3 4l18 18" stroke="#fff"/>';}
+}
+
+async function persist(){
+  localStorage.setItem(KEY, JSON.stringify(profile));
+  if(!cloudOK()){ setSync('offline'); return; }
+  setSync('syncing');
+  try{
+    let id=profile._id;
+    if(!id){
+      const res=await window.__SMART_PAGE__.database.query({databaseId:DATABASE_ID, filter:{property:{property:'档案ID', text:{equals:'default'}}}});
+      if(res.results&&res.results.length) id=res.results[0]._id;
+    }
+    if(id){
+      await window.__SMART_PAGE__.database.updateRecord({databaseId:DATABASE_ID, recordId:id, properties:toProps(profile)});
+    }else{
+      const r=await window.__SMART_PAGE__.database.addRecord({databaseId:DATABASE_ID, properties:Object.assign({档案ID:{text:'default'}}, toProps(profile))});
+      id=r.id;
+    }
+    profile._id=id;
+    localStorage.setItem(KEY, JSON.stringify(profile));
+    setSync('synced');
+  }catch(e){ setSync('offline'); }
+}
+
+async function load(){
+  let local=null;
+  try{ local=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
+  if(cloudOK()){
+    try{
+      const res=await window.__SMART_PAGE__.database.query({databaseId:DATABASE_ID, filter:{property:{property:'档案ID', text:{equals:'default'}}}});
+      if(res.results&&res.results.length){
+        const p=fromProps(res.results[0]); profile=p; setSync('synced');
+        if(local&&local._seeded&&!p._seeded){/*keep cloud*/}
+        localStorage.setItem(KEY, JSON.stringify(profile));
+        return;
+      }
+    }catch(e){}
+  }
+  if(local){ profile=local; setSync(cloud?'offline':'offline'); }
+  else { profile=seedProfile(); setSync('offline'); await persist(); }
+}
+
+/* ============ 业务逻辑 ============ */
+function getQueue(){
+  const s=new Set(profile.learned.map(x=>x.c));
+  let arr = CHARSET.filter(ch=> (profile.skipLearned===false) ? true : !s.has(ch.c));
+  arr.sort((a,b)=> ((a.extra?1:0)-(b.extra?0:1)) || (a.i-b.i));
+  return arr;
+}
+function getTodaySet(){return getQueue().slice(0,(profile.dailyGoal||10));}
+function todayLearnedCount(){const t=getTodaySet().map(x=>x.c);return profile.learned.filter(x=>t.includes(x.c)).length;}
+
+function learnChar(c){
+  if(profile.learned.find(x=>x.c===c)) return;
+  profile.learned.push({c,date:todayStr()});
+  profile.points+=10;
+  if(profile.lastDate!==todayStr()){ profile.streak = (daysBetween(profile.lastDate,todayStr())<=1)?profile.streak+1:1; profile.lastDate=todayStr(); }
+  persist(); render(); toast('太棒了！学会“'+c+'” +10分');
+}
+
+function startQuiz(){
+  const today=getTodaySet();
+  const src = today.length? today : (profile.learned.length? profile.learned.map(x=>CHARMAP[x.c]) : getTodaySet());
+  quiz = src.slice(0, Math.min(src.length, 5)).map(ch=>{
+    const correct = ch.words[0];
+    const others=[];
+    CHARSET.forEach(o=>{ if(o.c!==ch.c) o.words.forEach(w=>{ if(w!==correct && !others.includes(w)) others.push(w); }); });
+    for(let i=others.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[others[i],others[j]]=[others[j],others[i]];}
+    const opts=[correct,...others.slice(0,2)];
+    for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+    return {char:ch.c, correct, opts};
+  });
+  quizDone=0; quizOk=0; quizIdx=0; render();
+}
+
+function answer(opt, btnEl){
+  if(!quiz) return;
+  const q=quiz[quizIdx];
+  if(opt===q.correct){
+    btnEl.classList.add('ok'); quizOk++; quizDone++;
+    setTimeout(()=>{ if(quizDone<quiz.length){quizIdx++; render();} else {finishQuiz();} }, 650);
+  }else{
+    btnEl.classList.add('no');
+    setTimeout(()=>btnEl.classList.remove('no'),400);
+  }
+}
+function finishQuiz(){
+  const gain=quizOk*5; profile.points+=gain; persist();
+  toast('组词练习完成！答对 '+quizOk+'/'+quiz.length+'，+'+gain+'分');
+  quiz=null; switchTab('game');
+}
+
+function requestRedeem(r){
+  if(profile.points<r.cost){ toast('积分不够，再去学几个字吧！'); return; }
+  profile.pending.push({id:uid(),name:r.name,cost:r.cost,date:todayStr()});
+  persist(); toast('已请家长确认：“'+r.name+'”');
+  switchTab('parent');
+}
+function confirmRedeem(id){
+  const i=profile.pending.findIndex(p=>p.id===id); if(i<0)return;
+  const p=profile.pending[i];
+  profile.points-=p.cost; profile.history.push({name:p.name,cost:p.cost,date:p.date});
+  profile.pending.splice(i,1); persist(); render(); toast('已兑换：“'+p.name+'”');
+}
+function rejectRedeem(id){
+  const i=profile.pending.findIndex(p=>p.id===id); if(i<0)return;
+  profile.pending.splice(i,1); persist(); render(); toast('已取消该请求');
+}
+
+
+/* ============ 语音跟读 & 录音 ============ */
+function speak(text){
+  try{
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='zh-CN'; u.rate=0.7; u.pitch=1.1;
+    if(window.speechSynthesis){ window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }
+  }catch(e){}
+}
+let recState={active:false,rec:null,chunks:[],char:null,url:null};
+async function toggleRec(btn, ch){
+  if(recState.active){ try{ recState.rec.stop(); }catch(e){} return; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    recState.rec=new MediaRecorder(stream); recState.chunks=[]; recState.char=ch;
+    recState.rec.ondataavailable=e=>{ if(e.data && e.data.size) recState.chunks.push(e.data); };
+    recState.rec.onstop=()=>{
+      try{
+        const blob=new Blob(recState.chunks,{type:recState.rec.mimeType||'audio/webm'});
+        if(recState.url) URL.revokeObjectURL(recState.url);
+        recState.url=URL.createObjectURL(blob);
+        stream.getTracks().forEach(t=>t.stop());
+        recState.active=false;
+        profile.voiceCount=(profile.voiceCount||0)+1;
+        profile.recordDates=profile.recordDates||[];
+        profile.recordDates.push({c:ch,date:todayStr()});
+        persist();
+        const card=btn.closest('.card');
+        let pb=card?card.querySelector('.replay'):null;
+        if(!pb && card){ pb=document.createElement('button'); pb.className='btn ghost sm replay'; card.appendChild(pb); }
+        if(pb){ pb.textContent='🔊 我的声音'; pb.onclick=()=>{ const a=new Audio(recState.url); a.play(); }; }
+        btn.textContent='🎤 录一录';
+        toast('录音完成！累计录音 '+(profile.voiceCount)+' 次');
+      }catch(e){ toast('录音保存失败'); }
+    };
+    recState.rec.start(); recState.active=true;
+    btn.textContent='⏹ 停止录音';
+    toast('开始录音，跟着读“'+ch+'”吧');
+  }catch(e){ toast('无法录音，请允许使用麦克风'); }
+}
+
+/* ============ 成长记录 ============ */
+function renderGrow(){
+  const box=el('<div></div>');
+  const total=profile.learned.length; const goal=profile.dailyGoal||10; const level=Math.floor(total/goal);
+  const days=new Set(profile.learned.map(x=>x.date)).size; const voice=profile.voiceCount||0;
+  box.appendChild(el('<div class="card"><div class="stat"><div class="box"><div class="v">'+total+'</div><div class="k">已学字</div></div><div class="box"><div class="v">'+days+'</div><div class="k">学习天</div></div><div class="box"><div class="v">'+voice+'</div><div class="k">录音次</div></div></div><div class="stat" style="margin-top:10px"><div class="box"><div class="v">'+profile.points+'</div><div class="k">我的积分</div></div><div class="box"><div class="v">第'+level+'关</div><div class="k">当前关卡</div></div><div class="box"><div class="v">'+profile.streak+'</div><div class="k">连续天</div></div></div></div>'));
+  const TOTAL=CHARSET.length;
+  const pct=Math.min(100,Math.round(total/TOTAL*100));
+  box.appendChild(el('<div class="card"><h2><span class="dot"></span>识字总进度</h2><div class="muted">已经认识 '+total+' / '+TOTAL+' 个字</div><div class="progress"><i style="width:'+pct+'%"></i></div></div>'));
+  const ms=[10,30,50,100,150,200,280]; if(TOTAL>280 && !ms.includes(TOTAL)) ms.push(TOTAL); const next=ms.find(m=>total<m);
+  let mh='<div class="card"><h2><span class="dot"></span>成长里程碑</h2><div class="today-grid">';
+  ms.forEach(m=>{ const ok=total>=m; mh+='<div class="tchip '+(ok?'done':'')+'">'+(ok?'★':'·')+'<div style="font-size:10px;margin-top:2px">'+m+'字</div></div>'; });
+  mh+='</div>';
+  if(next) mh+='<div class="muted" style="text-align:center;margin-top:8px">再学 '+(next-total)+' 个字，解锁「'+next+'字」里程碑！</div>';
+  else mh+='<div class="muted" style="text-align:center;margin-top:8px">🏆 全部 '+TOTAL+' 字都学会啦，太了不起了！</div>';
+  mh+='</div>'; box.appendChild(el(mh));
+  const byDate={}; profile.learned.forEach(x=>{ byDate[x.date]=(byDate[x.date]||0)+1; });
+  const dates=Object.keys(byDate).sort().reverse().slice(0,12);
+  let ch='<div class="card"><h2><span class="dot"></span>学习日历</h2>';
+  if(dates.length===0) ch+='<div class="empty">还没有学习记录，去「今天」学第一个字吧！</div>';
+  else{ ch+='<div style="display:flex;flex-direction:column;gap:8px">'; dates.forEach(d=>{ ch+='<div class="list-item"><span class="nm">'+d+'</span><span class="meta">学了 '+byDate[d]+' 个字</span></div>'; }); ch+='</div>'; }
+  ch+='</div>'; box.appendChild(el(ch));
+  const recs=profile.recordDates||[];
+  if(recs.length){ let rh='<div class="card"><h2><span class="dot"></span>我的录音</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'; recs.slice(-20).forEach(r=>{ rh+='<span class="badge">'+r.c+'</span>'; }); rh+='</div></div>'; box.appendChild(el(rh)); }
+  if(profile.history&&profile.history.length){ let hh='<div class="card"><h2><span class="dot"></span>已兑换奖励</h2><div style="display:flex;flex-direction:column;gap:8px">'; profile.history.slice().reverse().forEach(h=>{ hh+='<div class="list-item"><span class="nm">'+h.name+'</span><span class="meta">'+h.cost+'分 · '+h.date+'</span></div>'; }); hh+='</div></div>'; box.appendChild(el(hh)); }
+  return box;
+}
+
+
+/* ============ 巩固复习 ============ */
+function renderReview(){
+  const box=el('<div></div>');
+  const total=profile.learned.length;
+  box.appendChild(el('<div class="card"><div class="stat"><div class="box"><div class="v">'+total+'</div><div class="k">已学汉字</div></div><div class="box"><div class="v">'+CHARSET.length+'</div><div class="k">字库总数</div></div><div class="box"><div class="v">'+Math.round(total/(CHARSET.length||1)*100)+'%</div><div class="k">掌握率</div></div></div>'+
+    '<button class="btn sec" id="startReview" style="margin-top:12px">🎯 开始巩固复习</button></div>'));
+  if(total===0){ box.appendChild(el('<div class="card"><div class="empty">还没有学会的字，去「今天」学几个吧！</div></div>')); return box; }
+  const byDate={}; profile.learned.forEach(x=>{ if(!(x.c in byDate)) byDate[x.c]=x.date; });
+  const ordered=[...new Set(profile.learned.map(x=>x.c))].sort((a,b)=> (byDate[a]<byDate[b]?-1:byDate[a]>byDate[b]?1:0));
+  const grid=el('<div class="card"><h2><span class="dot"></span>所有已学汉字（'+ordered.length+'）</h2><div class="today-grid" id="revGrid"></div><div class="muted" style="margin-top:8px">点一下字可以听发音；需要巩固的字排在前面。</div></div>');
+  box.appendChild(grid);
+  setTimeout(()=>{
+    const g=document.getElementById('revGrid'); if(!g) return;
+    ordered.forEach(c=>{
+      const cm=CHARMAP[c]; if(!cm) return;
+      const chip=el('<div class="tchip" title="'+cm.py+'">'+c+'</div>');
+      chip.style.fontSize='22px';
+      chip.onclick=()=>{ speak(c); toast(c+'  ·  '+cm.py); };
+      g.appendChild(chip);
+    });
+    const sb=document.getElementById('startReview');
+    if(sb) sb.onclick=()=>startReview(ordered);
+  },0);
+  return box;
+}
+function startReview(ordered){
+  const pool=(ordered&&ordered.length?ordered:profile.learned.map(x=>x.c)).map(c=>CHARMAP[c]).filter(Boolean);
+  if(pool.length===0){ toast('还没有学会的字'); return; }
+  quiz = pool.slice(0, Math.min(pool.length, 10)).map(ch=>{
+    const correct = ch.words[0];
+    const others=[];
+    CHARSET.forEach(o=>{ if(o.c!==ch.c) o.words.forEach(w=>{ if(w!==correct && !others.includes(w)) others.push(w); }); });
+    for(let i=others.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[others[i],others[j]]=[others[j],others[i]];}
+    const opts=[correct,...others.slice(0,2)];
+    for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+    return {char:ch.c, correct, opts};
+  });
+  quizDone=0; quizOk=0; quizIdx=0; currentTab='quiz'; mode='child'; render();
+  toast('巩固复习：选出含有这个字的词');
+}
+
+/* ============ 渲染 ============ */
+function el(html){const d=document.createElement('div');d.innerHTML=html.trim();return d.firstChild;}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+
+function render(){
+  document.getElementById('greet').textContent = mode==='parent' ? '家长管理后台' : (profile.points>=0?'小朋友的认字乐园':'');
+  const app=document.getElementById('app'); app.innerHTML='';
+  if(mode==='parent'){ app.appendChild(renderParent()); }
+  else {
+    if(currentTab==='today') app.appendChild(renderToday());
+    else if(currentTab==='cards') app.appendChild(renderCards());
+    else if(currentTab==='quiz') app.appendChild(renderQuiz());
+    else if(currentTab==='game') app.appendChild(renderGame());
+    else if(currentTab==='grow') app.appendChild(renderGrow());
+    else if(currentTab==='review') app.appendChild(renderReview());
+  }
+  // tab highlight
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===currentTab && mode==='child'));
+}
+
+function renderToday(){
+  const set=getTodaySet(); const done=todayLearnedCount(); const total=set.length||(profile.dailyGoal||10);
+  const pct = total? Math.round(done/total*100):100;
+  const allDone = set.length===0 || done>=total;
+  const box=el('<div></div>');
+  const head=el('<div class="card"><div class="today-head"><div><h2 style="margin:0"><span class="dot"></span>今天要处理</h2><div class="muted" id="tdate"></div></div><div class="ring"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="23" fill="none" stroke="#F0E2CC" stroke-width="6"/><circle id="rg" cx="27" cy="27" r="23" fill="none" stroke="#36C5A8" stroke-width="6" stroke-linecap="round"/></svg><div class="num" id="rnum"></div></div></div></div>');
+  box.appendChild(head);
+  const d=document.getElementById('tdate'); if(d) d.textContent=todayStr();
+  const rg=document.getElementById('rg'); if(rg) rg.style.strokeDasharray=(2*Math.PI*23)+' '+(2*Math.PI*23), rg.style.strokeDashoffset=(2*Math.PI*23*(1-pct/100));
+  const rn=document.getElementById('rnum'); if(rn) rn.textContent=done+'/'+total;
+  // chips
+  const grid=el('<div class="today-grid"></div>');
+  if(set.length===0){
+    box.appendChild(el('<div class="card"><div class="empty">今天的字都学完啦！去闯关领奖励吧～</div></div>'));
+  } else {
+    set.forEach(ch=>{
+      const isDone=profile.learned.find(x=>x.c===ch.c);
+      const chip=el('<div class="tchip '+(isDone?'done':'')+'">'+ch.c+'</div>');
+      grid.appendChild(chip);
+    });
+    box.appendChild(el('<div class="card"></div>').appendChild(grid).parentNode);
+  }
+  // CTA
+  const cta=el('<div class="card"></div>');
+  if(allDone && set.length>0){
+    cta.appendChild(el('<div class="muted" style="text-align:center;margin-bottom:10px">今天的 '+(profile.dailyGoal||10)+' 个字都学会啦，真厉害！</div>'));
+    cta.appendChild(btn('去组词练习 →','sec',()=>switchTab('quiz')));
+  }else if(set.length===0){
+    cta.appendChild(btn('去闯关领奖励 →','yel',()=>switchTab('game')));
+  }else{
+    cta.appendChild(el('<div class="muted" style="text-align:center;margin-bottom:10px;color:#E8453C">还有 '+(total-done)+' 个字没学哦，加油！</div>'));
+    cta.appendChild(btn('开始学今天的字 →','',()=>switchTab('cards')));
+  }
+  box.appendChild(cta);
+  // quick stats
+  const st=el('<div class="card" data-sp-bindable data-sp-database-id="S2StOn1hT0lod7VOKTGN3S"><div class="stat"><div class="box"><div class="v">'+profile.points+'</div><div class="k">我的积分</div></div><div class="box"><div class="v">'+profile.learned.length+'</div><div class="k">已学字</div></div><div class="box"><div class="v">'+Math.floor(profile.learned.length/(profile.dailyGoal||10))+'</div><div class="k">闯关卡</div></div></div></div>');
+  box.appendChild(st);
+  return box;
+}
+
+function renderCards(){
+  const set=getTodaySet();
+  const list = set.length? set : getQueue().slice(0,10);
+  if(list.length===0) return el('<div class="card"><div class="empty">全部字都学完啦！你真是认字小能手 🌟</div></div>');
+  if(cardsIdx>=list.length) cardsIdx=0;
+  const ch=list[cardsIdx];
+  const done=profile.learned.find(x=>x.c===ch.c);
+  const box=el('<div class="card stage"></div>');
+  box.appendChild(el('<div style="width:100%"><div class="muted" style="text-align:center">第 '+(cardsIdx+1)+' / '+list.length+' 个'+(done?' · 已学会':'' )+'</div></div>'));
+  const flip=el('<div class="flip" id="flip"><div class="flip-inner"><div class="face front"><div class="bigchar">'+ch.c+'</div><div class="py">'+ch.py+'</div></div><div class="face back"><span class="tag">'+ch.kind+'</span>'+pictSVG(ch.c)+'<div class="story">'+ch.story+'</div></div></div></div>');
+  flip.addEventListener('click',()=>flip.classList.toggle('flipped'));
+  box.appendChild(flip);
+  box.appendChild(el('<div class="muted" style="text-align:center">点一下卡片，看看它原来的样子</div>'));
+  const vc=el('<div class="row" style="margin-top:8px"></div>');
+  vc.appendChild(btn('🔊 听一听','yel sm',()=>speak(ch.c)));
+  vc.appendChild(btn('🎤 录一录','ghost sm',(e)=>toggleRec(e.currentTarget, ch.c)));
+  box.appendChild(vc);
+  const rw=el('<div class="row"></div>');
+  if(cardsIdx>0) rw.appendChild(btn('上一个','ghost sm',()=>{cardsIdx--;render();})); else rw.appendChild(el('<span></span>'));
+  rw.appendChild(btn(done?'再记一次':'我学会啦 +10','',()=>{learnChar(ch.c); if(cardsIdx<list.length-1)cardsIdx++; else cardsIdx=0; render();}));
+  if(cardsIdx<list.length-1) rw.appendChild(btn('下一个','ghost sm',()=>{cardsIdx++;render();})); else rw.appendChild(el('<span></span>'));
+  box.appendChild(rw);
+  box.appendChild(btn('去做组词练习 →','sec',()=>switchTab('quiz')));
+  return box;
+}
+
+function renderQuiz(){
+  if(!quiz) startQuiz();
+  if(!quiz||quiz.length===0) return el('<div class="card"><div class="empty">先去学几个字，再来组词练习吧！</div></div>');
+  const box=el('<div class="card"></div>');
+  if(quizIdx>=quiz.length){ /* safety */ }
+  const q=quiz[quizIdx];
+  box.appendChild(el('<div class="muted" style="text-align:center">组词练习 '+(quizIdx+1)+' / '+quiz.length+'</div>'));
+  box.appendChild(el('<div class="qchar">'+q.char+'</div>'));
+  const sb=el('<div style="text-align:center;margin:8px 0"></div>'); sb.appendChild(btn('🔊 听一听这个字','yel sm',()=>speak(q.char))); box.appendChild(sb);
+  box.appendChild(el('<div class="qhint">下面哪个词里有“'+q.char+'”？点一点！</div>'));
+  const opts=el('<div class="opts"></div>');
+  q.opts.forEach(o=>{
+    const b=el('<div class="opt">'+o+'</div>');
+    b.addEventListener('click',()=>answer(o,b));
+    opts.appendChild(b);
+  });
+  box.appendChild(opts);
+  box.appendChild(el('<div class="muted" style="text-align:center;margin-top:12px">答对一个 +5 分</div>'));
+  return box;
+}
+
+function renderGame(){
+  const goal=profile.dailyGoal||10;
+  const level=Math.floor(profile.learned.length/goal);
+  const inLevel=profile.learned.length%goal;
+  const pct=Math.round(inLevel/goal*100);
+  const box=el('<div class="card" data-sp-bindable data-sp-database-id="S2StOn1hT0lod7VOKTGN3S"></div>');
+  box.appendChild(el('<h2><span class="dot"></span>闯关积分</h2>'));
+  box.appendChild(el('<div class="stat"><div class="box"><div class="v">'+profile.points+'</div><div class="k">我的积分</div></div><div class="box"><div class="v">第'+level+'关</div><div class="k">当前关卡</div></div><div class="box"><div class="v">'+profile.learned.length+'</div><div class="k">已学字</div></div></div>'));
+  box.appendChild(el('<div class="muted">本关进度（'+inLevel+'/'+goal+'）</div>'));
+  const pr=el('<div class="progress"><i style="width:'+pct+'%"></i></div>'); box.appendChild(pr);
+  // rewards store
+  box.appendChild(el('<h2 style="margin-top:16px"><span class="dot"></span>奖励小超市</h2>'));
+  if(profile.rewards.length===0) box.appendChild(el('<div class="empty">还没有奖励，请家长去“家长”里添加～</div>'));
+  profile.rewards.forEach(r=>{
+    const rw=el('<div class="rw"><div class="ic">★</div>');
+    const nm=el('<div class="nm">'+r.name+'</div>'); rw.appendChild(nm);
+    rw.appendChild(el('<div class="ct">'+r.cost+'<small>分</small></div>'));
+    const b=btn(profile.points>=r.cost?'兑换':'积分不够','sm'+(profile.points>=r.cost?'':' ghost'),()=>requestRedeem(r));
+    rw.appendChild(b); box.appendChild(rw);
+  });
+  // pending
+  if(profile.pending.length){
+    box.appendChild(el('<h2 style="margin-top:16px;color:#E8453C"><span class="dot" style="background:#E8453C"></span>等待家长确认</h2>'));
+    profile.pending.forEach(p=>{
+      const rw=el('<div class="rw"><div class="ic" style="background:#FFE9E7;color:#E8453C">待</div>');
+      rw.appendChild(el('<div class="nm">'+p.name+'</div>'));
+      rw.appendChild(el('<div class="ct">'+p.cost+'<small>分</small></div>'));
+      box.appendChild(rw);
+    });
+    box.appendChild(el('<div class="muted" style="text-align:center">把手机交给爸爸妈妈，让他们在“家长”里确认～</div>'));
+  }
+  return box;
+}
+
+function renderParent(){
+  const box=el('<div></div>');
+  box.appendChild(el('<div class="card"><h2><span class="dot"></span>今日目标 & 数据</h2>'+
+    '<div class="stat"><div class="box"><div class="v">'+profile.points+'</div><div class="k">积分</div></div><div class="box"><div class="v">'+profile.learned.length+'</div><div class="k">已学字</div></div><div class="box"><div class="v">'+profile.streak+'</div><div class="k">连续天</div></div></div>'+
+    '<div class="field"><label>每天学几个字（默认 10）</label><input id="goalIn" type="number" min="1" max="20" value="'+(profile.dailyGoal||10)+'"></div>'+
+    '<button class="btn sm" id="saveGoal">保存目标</button>'+
+    '</div>'));
+  // rewards manage
+  const rwCard=el('<div class="card"><h2><span class="dot"></span>奖励管理</h2><div id="rwList"></div>'+
+    '<div class="field" style="margin-top:12px"><label>新增奖励名称</label><input id="rwName" placeholder="例如：看一集动画片"></div>'+
+    '<div class="field"><label>需要多少积分</label><input id="rwCost" type="number" min="1" value="50"></div>'+
+    '<button class="btn sm sec" id="addRw">添加奖励</button></div>');
+  box.appendChild(rwCard);
+  // confirm redemptions
+  const cf=el('<div class="card"><h2><span class="dot" style="background:#E8453C"></span>兑换确认</h2><div id="cfList"></div></div>');
+  box.appendChild(cf);
+  box.appendChild(el('<div class="card"><h2><span class="dot"></span>学习设置</h2>'+
+    '<label style="display:flex;align-items:flex-start;gap:10px;font-size:15px;cursor:pointer;line-height:1.4">'+
+    '<input type="checkbox" id="skipLearned" '+(profile.skipLearned!==false?'checked':'')+' style="width:20px;height:20px;margin-top:2px"> 跳过已学汉字（每天只学没学过的字，优先把前面的字学完）</label>'+
+    '<div class="muted" style="margin-top:6px">关闭后，已经学会的字也会重新出现在每天练习里，用来巩固复习。</div></div>'));
+  // data safety
+  box.appendChild(el('<div class="card"><h2><span class="dot"></span>数据安全</h2>'+
+    '<div class="row"><button class="btn ghost sm" id="exportBtn">导出备份</button><button class="btn ghost sm" id="importBtn">导入恢复</button></div>'+
+    '<div class="row" style="margin-top:10px"><button class="btn ghost sm" id="clearSeed">清空示例</button><button class="btn ghost sm" id="resetAll">清空全部</button></div>'+
+    '<input type="file" id="impFile" accept="application/json" class="hide"></div>'));
+  // bind
+  setTimeout(()=>{
+    document.getElementById('saveGoal').onclick=()=>{const v=parseInt(document.getElementById('goalIn').value)||10; profile.dailyGoal=Math.max(1,Math.min(20,v)); persist(); toast('已保存：每天 '+profile.dailyGoal+' 字'); render();};
+    const rl=document.getElementById('rwList'); profile.rewards.forEach(r=>{const it=el('<div class="list-item"><span class="nm">'+r.name+'</span><span class="meta">'+r.cost+'分</span><button class="del">删</button></div>'); it.querySelector('.del').onclick=()=>{profile.rewards=profile.rewards.filter(x=>x.id!==r.id); persist(); render();}; rl.appendChild(it);});
+    if(profile.rewards.length===0) rl.appendChild(el('<div class="empty">暂无奖励，下面添加一个吧</div>'));
+    document.getElementById('addRw').onclick=()=>{const n=document.getElementById('rwName').value.trim(); const c=parseInt(document.getElementById('rwCost').value)||0; if(!n||c<=0){toast('请填写名称和积分');return;} profile.rewards.push({id:uid(),name:n,cost:c}); persist(); render();};
+    const cl=document.getElementById('cfList');
+    if(profile.pending.length===0) cl.appendChild(el('<div class="empty">暂无待确认兑换</div>'));
+    profile.pending.forEach(p=>{const it=el('<div class="list-item"><span class="nm">'+p.name+'</span><span class="meta">'+p.cost+'分</span><button class="del" style="background:#E6F8EF;color:#2FA86A">确认</button></div>'); it.querySelector('.del').onclick=()=>confirmRedeem(p.id); cl.appendChild(it);});
+    document.getElementById('exportBtn').onclick=exportJSON;
+    document.getElementById('importBtn').onclick=()=>document.getElementById('impFile').click();
+    document.getElementById('impFile').onchange=importJSON;
+    document.getElementById('clearSeed').onclick=()=>{profile.learned=profile.learned.filter(x=>!['日','月','山'].includes(x.c)); if(profile._seeded)delete profile._seeded; persist(); render(); toast('已清空示例数据');};
+    const sk=document.getElementById('skipLearned'); if(sk) sk.onchange=(e)=>{ profile.skipLearned=e.target.checked; persist(); toast(profile.skipLearned?'已开启：跳过已学汉字':'已关闭：已学汉字也参与复习'); render(); };
+    document.getElementById('resetAll').onclick=()=>{ if(confirm('确定清空全部学习记录和积分？此操作不可恢复！')){ localStorage.removeItem(KEY); profile=seedProfile(); profile.learned=[]; profile.points=0; profile.streak=0; profile.history=[]; profile.pending=[]; persist(); render(); toast('已重置'); } };
+  },0);
+  return box;
+}
+
+function btn(label,cls,fn){const b=el('<button class="btn '+(cls||'')+'">'+label+'</button>'); b.addEventListener('click',fn); return b;}
+
+/* ============ 导入/导出 ============ */
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(profile,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='识字启蒙备份.json'; a.click();
+  toast('已导出备份');
+}
+function importJSON(e){
+  const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result); profile=Object.assign(seedProfile(),d); persist(); render(); toast('已恢复备份'); }catch(err){ toast('文件格式有误'); } };
+  r.readAsText(f);
+}
+
+/* ============ 导航 & PIN ============ */
+let currentTab='today';
+function switchTab(t){
+  if(t==='parent'){ openParentGate(); return; }
+  mode='child'; currentTab=t;
+  if(t==='cards') cardsIdx=0;
+  if(t==='quiz' && !quiz) startQuiz();
+  render();
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+
+let pinAction=null;
+function openParentGate(){
+  const saved=localStorage.getItem('wb_literacy_pin');
+  const mask=document.getElementById('pinMask');
+  const title=document.getElementById('pinTitle'), desc=document.getElementById('pinDesc'), inp=document.getElementById('pinInput');
+  inp.value='';
+  if(saved===null){ title.textContent='设置家长密码'; desc.textContent='首次进入，请设置 4 位数字密码（小朋友看不到）'; }
+  else { title.textContent='家长验证'; desc.textContent='请输入 4 位数字密码'; }
+  mask.classList.remove('hide'); inp.focus();
+  pinAction=(val)=>{
+    if(saved===null){ if(/^\d{4}$/.test(val)){ localStorage.setItem('wb_literacy_pin',val); mode='parent'; currentTab='parent'; mask.classList.add('hide'); render(); toast('家长模式已开启'); } else { toast('请输入4位数字'); } }
+    else { if(val===saved){ mode='parent'; currentTab='parent'; mask.classList.add('hide'); render(); } else { toast('密码错误'); } }
+  };
+}
+document.getElementById('pinOk').onclick=()=>{ if(pinAction) pinAction(document.getElementById('pinInput').value); };
+document.getElementById('pinCancel').onclick=()=>document.getElementById('pinMask').classList.add('hide');
+document.getElementById('pinInput').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);});
+document.getElementById('pinInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pinOk').click();});
+
+/* ============ 启动 ============ */
+(async function(){
+  setSync('syncing');
+  await load();
+  if(!profile.dailyGoal) profile.dailyGoal=10;
+  render();
+})();
+</script>
+</body>
+</html>
